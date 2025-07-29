@@ -1,0 +1,1055 @@
+/* Custom CSS for Portfolio */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Global font family */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 1.2rem;
+    font-weight: 400;
+}
+
+/* Root variables for dark mode */
+:root {
+    --bs-primary: #0d6efd;
+    --bs-secondary: #6c757d;
+    --bs-success: #198754;
+    --bs-info: #0dcaf0;
+    --bs-warning: #ffc107;
+    --bs-danger: #dc3545;
+    --bs-light: #f8f9fa;
+    --bs-dark: #212529;
+    
+    /* Dark theme colors */
+    --dark-bg: #0a0a0a;
+    --dark-surface: #1a1a1a;
+    --dark-card: #2a2a2a;
+    --dark-border: #333333;
+    --dark-text: #ffffff;
+    --dark-text-muted: #cccccc;
+    --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --hover-glow: rgba(102, 126, 234, 0.3);
+}
+
+/* Dark mode styles */
+[data-bs-theme="dark"] {
+    --bs-body-bg: var(--dark-bg);
+    --bs-body-color: var(--dark-text);
+    --bs-navbar-bg: var(--dark-surface);
+    --bs-card-bg: var(--dark-card);
+    --bs-border-color: var(--dark-border);
+}
+
+/* Global theme styling */
+body {
+    transition: all 0.3s ease;
+}
+
+/* Dark theme specific styling */
+[data-bs-theme="dark"] body {
+    background: var(--dark-bg) !important;
+    color: var(--dark-text) !important;
+}
+
+/* Light theme specific styling */
+[data-bs-theme="light"] body {
+    background: #ffffff !important;
+    color: #212529 !important;
+}
+
+/* Enhanced card styling */
+.card {
+    backdrop-filter: blur(10px);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Dark theme card styling */
+[data-bs-theme="dark"] .card {
+    background: var(--dark-card) !important;
+    border: 1px solid var(--dark-border) !important;
+}
+
+/* Light theme card styling */
+[data-bs-theme="light"] .card {
+    background: #ffffff !important;
+    border: 1px solid #dee2e6 !important;
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.card:hover::before {
+    left: 100%;
+}
+
+.card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(102, 126, 234, 0.2), 0 0 20px var(--hover-glow);
+    border-color: var(--bs-primary);
+}
+
+/* Dark theme text styling */
+[data-bs-theme="dark"] .text-muted {
+    color: var(--dark-text-muted) !important;
+}
+
+[data-bs-theme="dark"] h1, 
+[data-bs-theme="dark"] h2, 
+[data-bs-theme="dark"] h3, 
+[data-bs-theme="dark"] h4, 
+[data-bs-theme="dark"] h5, 
+[data-bs-theme="dark"] h6 {
+    color: var(--dark-text) !important;
+}
+
+/* Light theme text styling */
+[data-bs-theme="light"] .text-muted {
+    color: #6c757d !important;
+}
+
+[data-bs-theme="light"] h1, 
+[data-bs-theme="light"] h2, 
+[data-bs-theme="light"] h3, 
+[data-bs-theme="light"] h4, 
+[data-bs-theme="light"] h5, 
+[data-bs-theme="light"] h6 {
+    color: #343a40 !important;
+}
+
+/* Hero section with enhanced animations */
+.hero {
+    background: var(--accent-gradient);
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    animation: gradientShift 8s ease-in-out infinite;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: pulse 4s ease-in-out infinite;
+}
+
+.hero > * {
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.1; }
+    50% { opacity: 0.3; }
+}
+
+/* Navbar customization with animations */
+.navbar {
+    transition: all 0.3s ease;
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid var(--dark-border);
+    animation: slideDown 0.5s ease-out;
+}
+
+.navbar-brand {
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.navbar-brand:hover {
+    transform: scale(1.05);
+    text-shadow: 0 0 10px var(--bs-primary);
+}
+
+/* Logo Brand Styling */
+.logo-brand {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.logo-image {
+    height: 60px;
+    width: auto;
+    max-width: 180px;
+    transition: all 0.3s ease;
+    filter: brightness(1);
+}
+
+.logo-brand:hover .logo-image {
+    transform: scale(1.05);
+    filter: brightness(1.1) drop-shadow(0 0 10px rgba(102, 126, 234, 0.5));
+}
+
+/* Theme-specific logo visibility and styling */
+[data-bs-theme="dark"] .logo-dark {
+    display: inline-block;
+    filter: brightness(1.2) contrast(1.1);
+}
+
+[data-bs-theme="dark"] .logo-light {
+    display: none;
+}
+
+[data-bs-theme="light"] .logo-dark {
+    display: none;
+}
+
+[data-bs-theme="light"] .logo-light {
+    display: inline-block;
+    filter: brightness(0.8) contrast(1.2) sepia(0.1);
+}
+
+/* Fallback text logo styling (if images fail to load) */
+.logo-fallback {
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.15rem;
+}
+
+.logo-k {
+    color: #667eea;
+    font-weight: 900;
+    font-size: 1.4rem;
+    text-shadow: 0 0 15px rgba(102, 126, 234, 0.5);
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.logo-a {
+    color: #764ba2;
+    font-weight: 900;
+    font-size: 1.4rem;
+    text-shadow: 0 0 15px rgba(118, 75, 162, 0.5);
+    animation: pulse-glow 2s ease-in-out infinite 0.3s;
+}
+
+.logo-text {
+    color: var(--dark-text);
+    font-weight: 600;
+    font-size: 1rem;
+    margin-left: 0.2rem;
+    letter-spacing: 0.3px;
+}
+
+.logo-brand:hover .logo-k {
+    transform: scale(1.1) rotate(5deg);
+    color: #8a9cff;
+}
+
+.logo-brand:hover .logo-a {
+    transform: scale(1.1) rotate(-5deg);
+    color: #9d6cc7;
+}
+
+.logo-brand:hover .logo-text {
+    color: var(--bs-primary);
+    transform: translateX(5px);
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        text-shadow: 0 0 15px rgba(102, 126, 234, 0.5);
+    }
+    50% {
+        text-shadow: 0 0 25px rgba(102, 126, 234, 0.8), 0 0 35px rgba(102, 126, 234, 0.6);
+    }
+}
+
+/* Additional mobile responsive improvements */
+@media (max-width: 576px) {
+    .hero {
+        padding: 2rem 0;
+    }
+    
+    .hero h1 {
+        font-size: 1.9rem;
+    }
+    
+    .hero .lead {
+        font-size: 1rem;
+    }
+    
+    .container {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+    
+    .btn-lg {
+        font-size: 0.95rem;
+        padding: 0.65rem 1.25rem;
+    }
+    
+    .d-flex.gap-3 {
+        flex-direction: column;
+        gap: 0.75rem !important;
+    }
+    
+    .hero img {
+        max-width: 250px;
+    }
+    
+    /* Better card spacing on small screens */
+    .card-body {
+        padding: 1rem;
+    }
+    
+    /* Improve navbar brand on small screens */
+    .logo-image {
+        height: 42px;
+        max-width: 120px;
+    }
+    
+    /* Better section spacing */
+    section.py-5 {
+        padding: 2.5rem 0;
+    }
+}
+
+/* Responsive logo sizing */
+@media (max-width: 768px) {
+    .logo-image {
+        height: 48px;
+        max-width: 140px;
+    }
+}
+
+.nav-link {
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--bs-primary);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.nav-link:hover::after {
+    width: 100%;
+}
+
+.nav-link:hover {
+    color: var(--bs-primary) !important;
+    transform: translateY(-2px);
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.navbar-brand {
+    font-size: 1.4rem;
+    font-weight: bold;
+}
+
+/* Enhanced font sizes */
+.nav-link {
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+p {
+    font-size: 1.2rem;
+    line-height: 1.7;
+    font-weight: 400;
+}
+
+.lead {
+    font-size: 1.6rem;
+    font-weight: 400;
+}
+
+h1 {
+    font-size: 3.2rem;
+    font-weight: 700;
+}
+
+h2 {
+    font-size: 2.8rem;
+    font-weight: 600;
+}
+
+h3 {
+    font-size: 2.2rem;
+    font-weight: 600;
+}
+
+h4 {
+    font-size: 1.8rem;
+    font-weight: 500;
+}
+
+h5 {
+    font-size: 1.5rem;
+    font-weight: 500;
+}
+
+h6 {
+    font-size: 1.3rem;
+    font-weight: 500;
+}
+
+.btn {
+    font-size: 1.1rem;
+    padding: 0.6rem 1.2rem;
+}
+
+/* Card hover effects */
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Tech stack badges with animations */
+.tech-stack .badge {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.tech-stack .badge::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.tech-stack .badge:hover::before {
+    left: 100%;
+}
+
+.tech-stack .badge:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+}
+
+/* Dark mode toggle */
+#theme-toggle {
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+#theme-toggle:hover {
+    transform: scale(1.1);
+}
+
+/* Chat messages styling */
+#chat-messages {
+    background: var(--bs-light);
+    color: #212529;
+}
+
+[data-bs-theme="dark"] #chat-messages {
+    background: var(--dark-card);
+    border-color: var(--dark-border);
+    color: var(--dark-text);
+}
+
+/* Chatbot response specific styling */
+[data-bs-theme="dark"] .chatbot-response {
+    background: var(--dark-surface);
+    color: #e9ecef;
+    border-left: 3px solid var(--bs-primary);
+    padding: 1rem;
+    margin: 0.5rem 0;
+    border-radius: 0.5rem;
+}
+
+[data-bs-theme="light"] .chatbot-response {
+    background: #f8f9fa;
+    color: #495057;
+    border-left: 3px solid var(--bs-primary);
+    padding: 1rem;
+    margin: 0.5rem 0;
+    border-radius: 0.5rem;
+}
+
+/* User message styling */
+[data-bs-theme="dark"] .user-message {
+    background: var(--dark-border);
+    color: var(--dark-text);
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+    border-radius: 0.5rem;
+    text-align: right;
+}
+
+[data-bs-theme="light"] .user-message {
+    background: #e9ecef;
+    color: #495057;
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+    border-radius: 0.5rem;
+    text-align: right;
+}
+
+/* Enhanced Animation classes */
+.fade-in {
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.fade-in-left {
+    animation: fadeInLeft 0.8s ease-out;
+}
+
+.fade-in-right {
+    animation: fadeInRight 0.8s ease-out;
+}
+
+.bounce-in {
+    animation: bounceIn 0.8s ease-out;
+}
+
+.scale-in {
+    animation: scaleIn 0.6s ease-out;
+}
+
+.slide-up {
+    animation: slideUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero {
+        min-height: 50vh;
+        text-align: center;
+        padding: 3rem 0;
+    }
+    
+    .hero h1 {
+        font-size: 2.2rem;
+        margin-bottom: 1rem;
+    }
+    
+    .hero .lead {
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .display-4 {
+        font-size: 2.2rem;
+    }
+    
+    .display-5 {
+        font-size: 1.8rem;
+    }
+    
+    body {
+        font-size: 1rem;
+    }
+    
+    p {
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+    
+    /* Mobile navigation improvements */
+    .navbar-nav {
+        text-align: center;
+        padding-top: 1rem;
+    }
+    
+    .nav-link {
+        font-size: 1.1rem;
+        padding: 0.75rem 0;
+    }
+    
+    /* Better button sizing on mobile */
+    .btn-lg {
+        font-size: 1rem;
+        padding: 0.75rem 1.5rem;
+    }
+    
+    .btn {
+        font-size: 0.95rem;
+        padding: 0.5rem 1rem;
+    }
+    
+    /* Card improvements for mobile */
+    .card {
+        margin-bottom: 1.5rem;
+    }
+    
+    .card-body {
+        padding: 1.25rem;
+    }
+    
+    /* Better spacing on mobile */
+    .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    /* Image responsive improvements */
+    .hero img {
+        max-width: 280px;
+        margin-top: 2rem;
+    }
+    
+    /* Font size fixes for headings */
+    h1 {
+        font-size: 2.2rem;
+    }
+    
+    h2 {
+        font-size: 1.8rem;
+    }
+    
+    h3 {
+        font-size: 1.5rem;
+    }
+    
+    h4 {
+        font-size: 1.3rem;
+    }
+    
+    h5 {
+        font-size: 1.1rem;
+    }
+    
+    h6 {
+        font-size: 1rem;
+    }
+    
+    /* Skills section mobile improvements */
+    .skills-section .col-md-3 {
+        margin-bottom: 1rem;
+    }
+    
+    .skills-section .display-4 {
+        font-size: 2.5rem;
+    }
+}
+
+/* Skills section icons */
+.skills-section .bi {
+    transition: transform 0.3s ease;
+}
+
+.skills-section .card:hover .bi {
+    transform: scale(1.1);
+}
+
+/* Project images */
+.project-image {
+    height: 250px;
+    object-fit: cover;
+    border-radius: 0.375rem;
+}
+
+/* Blog content styling */
+.content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.375rem;
+    margin: 1rem 0;
+}
+
+.content h1,
+.content h2,
+.content h3,
+.content h4,
+.content h5,
+.content h6 {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.content p {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.content code {
+    background: var(--bs-light);
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-family: 'Courier New', monospace;
+}
+
+[data-bs-theme="dark"] .content code {
+    background: var(--bs-dark);
+    color: #f8f9fa;
+}
+
+/* Footer */
+footer {
+    margin-top: auto;
+}
+
+footer a {
+    transition: color 0.3s ease;
+}
+
+footer a:hover {
+    color: var(--bs-primary) !important;
+}
+
+/* Contact form with dark theme and animations */
+.contact-form .form-control {
+    border-radius: 0.5rem;
+    border: 2px solid var(--dark-border);
+    background: var(--dark-card);
+    color: var(--dark-text);
+    transition: all 0.3s ease;
+}
+
+.contact-form .form-control:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25), 0 0 20px rgba(13, 110, 253, 0.1);
+    transform: scale(1.02);
+}
+
+.contact-form .form-control::placeholder {
+    color: var(--dark-text-muted);
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.btn-loading {
+    position: relative;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1rem;
+    height: 1rem;
+    margin-top: -0.5rem;
+    margin-left: -0.5rem;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Enhanced Utility classes */
+.text-shadow {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.bg-gradient {
+    background: var(--accent-gradient);
+}
+
+.glow-text {
+    text-shadow: 0 0 10px var(--bs-primary), 0 0 20px var(--bs-primary), 0 0 30px var(--bs-primary);
+}
+
+.floating {
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.rotate-on-hover {
+    transition: transform 0.3s ease;
+}
+
+.rotate-on-hover:hover {
+    transform: rotate(360deg);
+}
+
+.gradient-border {
+    border: 2px solid;
+    border-image: var(--accent-gradient) 1;
+    border-radius: 8px;
+}
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Enhanced button animations */
+.btn {
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+    z-index: -1;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.btn-primary {
+    background: var(--accent-gradient);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: var(--accent-gradient);
+    filter: brightness(1.1);
+}
+
+/* Page load animations */
+.page-enter {
+    animation: pageEnter 0.8s ease-out;
+}
+
+@keyframes pageEnter {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Stagger animations for lists */
+.stagger-item {
+    opacity: 0;
+    animation: staggerIn 0.6s ease-out forwards;
+}
+
+.stagger-item:nth-child(1) { animation-delay: 0.1s; }
+.stagger-item:nth-child(2) { animation-delay: 0.2s; }
+.stagger-item:nth-child(3) { animation-delay: 0.3s; }
+.stagger-item:nth-child(4) { animation-delay: 0.4s; }
+.stagger-item:nth-child(5) { animation-delay: 0.5s; }
+.stagger-item:nth-child(6) { animation-delay: 0.6s; }
+
+@keyframes staggerIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+}
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--dark-surface);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--dark-border);
+    border-radius: 4px;
+    transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--bs-primary);
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+    /* Better touch targets */
+    .navbar-toggler {
+        padding: 0.5rem;
+        border: none;
+        font-size: 1.5rem;
+    }
+    
+    /* Improved card hover effects for mobile */
+    .card:hover {
+        transform: none;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Better footer on mobile */
+    footer .row {
+        text-align: center;
+    }
+    
+    footer .col-md-6 {
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Improved project cards on mobile */
+    .project-image {
+        height: 200px;
+    }
+    
+    /* Better form controls on mobile */
+    .form-control {
+        font-size: 1rem;
+        padding: 0.75rem;
+    }
+    
+    /* Disable hover effects on mobile */
+    .tech-stack .badge:hover {
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .btn:hover {
+        transform: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Better list spacing */
+    .stagger-item {
+        margin-bottom: 1rem;
+    }
+    
+    /* Improved navbar collapse */
+    .navbar-collapse {
+        border-top: 1px solid var(--dark-border);
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+    }
+}

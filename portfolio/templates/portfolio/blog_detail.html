@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ blog_post.title }} - Blog{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'blog' %}">Blog</a></li>
+                    <li class="breadcrumb-item active">{{ blog_post.title }}</li>
+                </ol>
+            </nav>
+            
+            <article>
+                <header class="mb-4">
+                    <h1 class="display-5 mb-3">{{ blog_post.title }}</h1>
+                    <div class="text-muted mb-3">
+                        <i class="bi bi-calendar"></i> {{ blog_post.created_at|date:"F d, Y" }}
+                        {% if blog_post.updated_at != blog_post.created_at %}
+                            <span class="ms-3">
+                                <i class="bi bi-pencil"></i> Updated {{ blog_post.updated_at|date:"F d, Y" }}
+                            </span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if blog_post.cover_image %}
+                    <img src="{{ blog_post.cover_image.url }}" class="img-fluid rounded mb-4" alt="{{ blog_post.title }}">
+                    {% endif %}
+                </header>
+                
+                <div class="content">
+                    {{ blog_post.content|safe }}
+                </div>
+            </article>
+            
+            <hr class="my-5">
+            
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'blog' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Blog
+                </a>
+                <a href="{% url 'contact' %}" class="btn btn-primary">
+                    Get In Touch <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

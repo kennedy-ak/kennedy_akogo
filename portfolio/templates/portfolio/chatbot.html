@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Chatbot - Portfolio{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto text-center mb-5">
+            <h1 class="display-4 mb-3">AI Assistant</h1>
+            <p class="lead">Ask me anything about my work, experience, or projects!</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-robot"></i> Chat Assistant
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="chat-messages" class="mb-3" style="height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 1rem;">
+                        <div class="d-flex mb-3">
+                            <div class="flex-shrink-0">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="bi bi-robot"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="bg-light rounded p-3">
+                                    <p class="mb-0">Hello! I'm your AI assistant. Feel free to ask me anything about my portfolio, projects, or experience. How can I help you today?</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="user-input" placeholder="Type your message here..." maxlength="500">
+                        <button class="btn btn-primary" type="button" id="send-button">
+                            <i class="bi bi-send"></i> Send
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">Quick Questions</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button class="btn btn-outline-primary btn-sm quick-question" data-question="What technologies do you work with?">
+                                Technologies
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm quick-question" data-question="Tell me about your latest project">
+                                Latest Project
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm quick-question" data-question="What's your experience with Django?">
+                                Django Experience
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm quick-question" data-question="How can I contact you?">
+                                Contact Info
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const messagesContainer = document.getElementById('chat-messages');
+    const userInput = document.getElementById('user-input');
+    const sendButton = document.getElementById('send-button');
+    const quickQuestions = document.querySelectorAll('.quick-question');
+
+    function addMessage(message, isUser = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'd-flex mb-3';
+        
+        if (isUser) {
+            messageDiv.innerHTML = `
+                <div class="flex-grow-1 me-3 text-end">
+                    <div class="bg-primary text-white rounded p-3 d-inline-block">
+                        <p class="mb-0">${message}</p>
+                    </div>
+                </div>
+                <div class="flex-shrink-0">
+                    <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="bi bi-person"></i>
+                    </div>
+                </div>
+            `;
+        } else {
+            messageDiv.innerHTML = `
+                <div class="flex-shrink-0">
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="bi bi-robot"></i>
+                    </div>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <div class="bg-light rounded p-3">
+                        <p class="mb-0">${message}</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        messagesContainer.appendChild(messageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function sendMessage() {
+        const message = userInput.value.trim();
+        if (!message) return;
+        
+        addMessage(message, true);
+        userInput.value = '';
+        sendButton.disabled = true;
+        
+        // Add typing indicator
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'd-flex mb-3';
+        typingDiv.id = 'typing-indicator';
+        typingDiv.innerHTML = `
+            <div class="flex-shrink-0">
+                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                    <i class="bi bi-robot"></i>
+                </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+                <div class="bg-light rounded p-3">
+                    <p class="mb-0">Typing...</p>
+                </div>
+            </div>
+        `;
+        messagesContainer.appendChild(typingDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        
+        // Send to backend
+        fetch('{% url "chatbot_ask" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: message
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Remove typing indicator
+            const typingIndicator = document.getElementById('typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+            
+            if (data.status === 'success') {
+                addMessage(data.response);
+            } else {
+                addMessage('Sorry, I encountered an error. Please try again.');
+            }
+        })
+        .catch(error => {
+            // Remove typing indicator
+            const typingIndicator = document.getElementById('typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+            addMessage('Sorry, I encountered an error. Please try again.');
+        })
+        .finally(() => {
+            sendButton.disabled = false;
+        });
+    }
+
+    sendButton.addEventListener('click', sendMessage);
+    
+    userInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+    
+    quickQuestions.forEach(button => {
+        button.addEventListener('click', function() {
+            const question = this.getAttribute('data-question');
+            userInput.value = question;
+            sendMessage();
+        });
+    });
+});
+</script>
+{% endblock %}

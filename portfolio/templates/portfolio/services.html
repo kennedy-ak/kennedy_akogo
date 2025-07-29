@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Services - Portfolio{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto text-center">
+            <h1 class="display-4 mb-4">Professional Services</h1>
+            <p class="lead">Specialized AI/ML solutions, web development, and research services tailored to your needs</p>
+        </div>
+    </div>
+
+    <!-- Services Grid -->
+    <div class="row g-4 mb-5">
+        <!-- AI/Machine Learning -->
+        <div class="col-lg-6 stagger-item">
+            <div class="card h-100 shadow-sm fade-in-left">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-cpu-fill text-primary me-3 floating" style="font-size: 2rem;"></i>
+                        <h3 class="card-title mb-0">AI/Machine Learning</h3>
+                    </div>
+                    <div class="service-items">
+                        <div class="service-item mb-3">
+                            <h6>Fine-tuning Small Models</h6>
+                            <p class="text-muted mb-1">Custom fine-tuning of ML models for specific tasks</p>
+                            <span class="badge bg-success">₵500 - ₵800</span>
+                        </div>
+                        <div class="service-item mb-3">
+                            <h6>Retrieval-Augmented Generation (RAG)</h6>
+                            <p class="text-muted mb-1">Build or integrate RAG systems for enhanced Q&A</p>
+                            <span class="badge bg-success">₵400 - ₵800</span>
+                        </div>
+                        <div class="service-item mb-3">
+                            <h6>Computer Vision Models</h6>
+                            <p class="text-muted mb-1">Image classification and detection models</p>
+                            <span class="badge bg-success">₵550 - ₵1000</span>
+                        </div>
+                        <div class="service-item">
+                            <h6>Predictive Models</h6>
+                            <p class="text-muted mb-1">Regression and classification models</p>
+                            <span class="badge bg-success">₵500 - ₵1000</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Web Development -->
+        <div class="col-lg-6 stagger-item">
+            <div class="card h-100 shadow-sm fade-in-right">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-globe text-primary me-3 floating" style="font-size: 2rem;"></i>
+                        <h3 class="card-title mb-0">Web Development</h3>
+                    </div>
+                    <div class="service-items">
+                        <div class="service-item mb-3">
+                            <h6>Django Development</h6>
+                            <p class="text-muted mb-1">Full-stack Django application development</p>
+                            <span class="badge bg-success">₵1500 - ₵2500</span>
+                        </div>
+                        <div class="service-item">
+                            <h6>WordPress Development</h6>
+                            <p class="text-muted mb-1">Custom WordPress sites and plugin development</p>
+                            <span class="badge bg-success">₵1000 - ₵2000</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Academic Projects -->
+        <div class="col-lg-6 stagger-item">
+            <div class="card h-100 shadow-sm fade-in-left">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-mortarboard-fill text-primary me-3 floating" style="font-size: 2rem;"></i>
+                        <h3 class="card-title mb-0">Academic Projects</h3>
+                    </div>
+                    <div class="service-items">
+                        <div class="service-item mb-3">
+                            <h6>Final Year Projects</h6>
+                            <p class="text-muted mb-1">Idea generation and software prototype</p>
+                            <span class="badge bg-success">$1000 - $1500</span>
+                        </div>
+                        <div class="service-item">
+                            <h6>Complete Solution + Documentation</h6>
+                            <p class="text-muted mb-1">Full project with detailed documentation</p>
+                            <span class="badge bg-success">$1500 - $2000</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Research Services -->
+        <div class="col-lg-6 stagger-item">
+            <div class="card h-100 shadow-sm fade-in-right">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-search text-primary me-3 floating" style="font-size: 2rem;"></i>
+                        <h3 class="card-title mb-0">Research Services</h3>
+                    </div>
+                    <div class="service-items">
+                        <div class="service-item">
+                            <h6>ML/CV Research Support</h6>
+                            <p class="text-muted mb-1">Experimentation and model evaluations</p>
+                            <span class="badge bg-success">₵1200/month</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add-ons Section -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Add-ons & Additional Services</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <h6>Hosting & Deployment</h6>
+                            <p class="text-muted mb-1">Streamlit/Django deployment</p>
+                            <span class="badge bg-info">₵250</span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <h6>Documentation & Training</h6>
+                            <p class="text-muted mb-1">Per project documentation</p>
+                            <span class="badge bg-info">₵250</span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <h6>1-on-1 Consultation</h6>
+                            <p class="text-muted mb-1">Strategy consultation per hour</p>
+                            <span class="badge bg-info">₵150/hour</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pricing Notes -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto">
+            <div class="alert alert-info">
+                <h6 class="alert-heading">Pricing Information</h6>
+                <ul class="mb-0">
+                    <li>Prices are indicative and may vary based on project complexity</li>
+                    <li>Custom quotes available for ongoing or larger projects</li>
+                    <li>Discounts available for bundled services or repeat clients</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto text-center">
+            <h3 class="mb-4">Ready to Start Your Project?</h3>
+            <p class="mb-4">Let's discuss your requirements and create a custom solution for your needs.</p>
+            <a href="{% url 'contact' %}" class="btn btn-primary btn-lg">Get a Quote</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
