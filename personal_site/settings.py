@@ -25,8 +25,14 @@ SECRET_KEY = 'django-insecure-8rkn)jnxuv!*=%nvm(%v#dfn)9xoqf=f7o&^9ek7f@yi-k&0v_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ["*"]
+CSRF_TRUSTED_ORIGINS = [
+    'http://127.0.0.1:8000',
+    'http://localhost:8000',
+    "https://kennedy-akogo.onrender.com/"
+  ,  # Replace with your actual domain
+    # Add any other domains you're using
+]
 
 # Application definition
 
