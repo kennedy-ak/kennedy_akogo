@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "portfolio",  # Custom app for portfolio
      'ckeditor',
     'ckeditor_uploader',
+    'taggit',
   
 ]
 
@@ -150,3 +151,7 @@ CKEDITOR_CONFIGS = {
         'width': '100%',
     },
 }
+
+# Mnotify SMS settings
+MNOTIFY_API_KEY = 'qqYaIprq4RZ25q9JENdRqQbKZ'  # Replace with your actual API key
+ADMIN_PHONE_NUMBER = '+233557782728'  # Your phone number for notifications

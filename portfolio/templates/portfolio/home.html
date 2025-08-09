@@ -163,4 +163,41 @@
         </div>
     </div>
 </section>
+
+<!-- Featured Blogs -->
+<section class="py-5" style="background: var(--dark-surface);">
+    <div class="container">
+        <h2 class="text-center mb-5 bounce-in">Featured Blogs</h2>
+        <div class="row">
+            {% for blog in featured_blogs %}
+            <div class="col-lg-4 mb-4 stagger-item">
+                <div class="card h-100">
+                    {% if blog.cover_image %}
+                        <img src="{{ blog.cover_image.url }}" class="card-img-top" alt="{{ blog.title }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                        <div class="card-img-top d-flex align-items-center justify-content-center" style="height: 200px; background: var(--dark-surface);">
+                            <i class="bi bi-image display-4 text-muted"></i>
+                        </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ blog.title }}</h5>
+                        <p class="card-text">{{ blog.content|striptags|truncatewords:20 }}</p>
+                        <p class="text-muted small">{{ blog.created_at|date:"M d, Y" }}</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="{% url 'blog_detail' blog.slug %}" class="btn btn-primary">Read More</a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center">
+                <p class="text-muted">No blog posts available yet.</p>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-4 fade-in">
+            <a href="{% url 'blog' %}" class="btn btn-outline-primary">View All Blogs</a>
+        </div>
+    </div>
+</section>
 {% endblock %}

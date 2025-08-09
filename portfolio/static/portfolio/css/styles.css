@@ -10,7 +10,7 @@ body {
 
 /* Root variables for dark mode */
 :root {
-    --bs-primary: #0d6efd;
+    --bs-primary: #8A2BE2; /* Blue Violet */
     --bs-secondary: #6c757d;
     --bs-success: #198754;
     --bs-info: #0dcaf0;
@@ -26,8 +26,8 @@ body {
     --dark-border: #333333;
     --dark-text: #ffffff;
     --dark-text-muted: #cccccc;
-    --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --hover-glow: rgba(102, 126, 234, 0.3);
+    --accent-gradient: linear-gradient(135deg, #8A2BE2 0%, #4B0082 100%); /* Blue Violet to Indigo */
+    --hover-glow: rgba(138, 43, 226, 0.3);
 }
 
 /* Dark mode styles */
@@ -229,18 +229,18 @@ body {
 }
 
 .logo-k {
-    color: #667eea;
+    color: #8A2BE2; /* Blue Violet */
     font-weight: 900;
     font-size: 1.4rem;
-    text-shadow: 0 0 15px rgba(102, 126, 234, 0.5);
+    text-shadow: 0 0 15px rgba(138, 43, 226, 0.5);
     animation: pulse-glow 2s ease-in-out infinite;
 }
 
 .logo-a {
-    color: #764ba2;
+    color: #4B0082; /* Indigo */
     font-weight: 900;
     font-size: 1.4rem;
-    text-shadow: 0 0 15px rgba(118, 75, 162, 0.5);
+    text-shadow: 0 0 15px rgba(75, 0, 130, 0.5);
     animation: pulse-glow 2s ease-in-out infinite 0.3s;
 }
 
@@ -445,6 +445,9 @@ h6 {
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
+    background-color: transparent;
+    color: var(--bs-body-color);
+    border: 1px solid var(--bs-primary);
 }
 
 .tech-stack .badge::before {

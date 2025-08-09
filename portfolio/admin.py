@@ -25,7 +25,7 @@ class ProjectAdmin(admin.ModelAdmin):
     
     fieldsets = (
         (None, {
-            'fields': ('title', 'description', 'tech_stack', 'github_url')
+            'fields': ('title', 'description', 'tags', 'github_url')
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
