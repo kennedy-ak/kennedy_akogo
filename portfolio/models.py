@@ -4,6 +4,38 @@ from ckeditor_uploader.fields import RichTextUploadingField
 from taggit.managers import TaggableManager
 
 
+class NewsletterSubscriber(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField(unique=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    subscribed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-subscribed_at']
+
+    def __str__(self):
+        return f"{self.name} - {self.email}"
+
+
+class NewsletterCampaign(models.Model):
+    title = models.CharField(max_length=200)
+    subject = models.CharField(max_length=200)
+    content = models.TextField()
+    article_title = models.CharField(max_length=300, blank=True)
+    article_link = models.URLField(blank=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+    total_sent = models.IntegerField(default=0)
+    success_count = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
+
+
 class Project(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()

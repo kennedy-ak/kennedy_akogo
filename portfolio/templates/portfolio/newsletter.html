@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tech News Newsletter - Portfolio{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tech-card {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        color: white;
+        box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+    }
+    
+    .form-container {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .success-message {
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        color: white;
+    }
+    
+    .floating-icons {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: -1;
+        overflow: hidden;
+    }
+    
+    .tech-float {
+        position: absolute;
+        font-size: 2rem;
+        opacity: 0.1;
+        animation: float 20s infinite linear;
+    }
+    
+    @keyframes float {
+        0% {
+            transform: translateY(100vh) rotate(0deg);
+        }
+        100% {
+            transform: translateY(-100px) rotate(360deg);
+        }
+    }
+    
+    .info-box {
+        background-color: #172554;
+        border-radius: 8px;
+        border: 1px solid #1E40AF;
+        padding: 15px;
+        margin-top: 15px;
+    }
+    
+    .info-box h4 {
+        color: #60A5FA;
+    }
+    
+    .info-box p {
+        color: #CBD5E1;
+        font-size: 0.9rem;
+    }
+    
+    .btn-subscribe {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-subscribe:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Floating Background Icons -->
+    <div class="floating-icons">
+        <div class="tech-float" style="left:5%; top:10%; animation-delay:0s;">🔧</div>
+        <div class="tech-float" style="left:15%; top:30%; animation-delay:2s;">💻</div>
+        <div class="tech-float" style="left:25%; top:50%; animation-delay:4s;">📱</div>
+        <div class="tech-float" style="left:35%; top:70%; animation-delay:6s;">🌐</div>
+        <div class="tech-float" style="left:45%; top:20%; animation-delay:8s;">🔍</div>
+        <div class="tech-float" style="left:55%; top:40%; animation-delay:10s;">📊</div>
+        <div class="tech-float" style="left:65%; top:60%; animation-delay:12s;">🚀</div>
+        <div class="tech-float" style="left:75%; top:80%; animation-delay:14s;">🔒</div>
+        <div class="tech-float" style="left:85%; top:15%; animation-delay:16s;">🌟</div>
+        <div class="tech-float" style="left:95%; top:35%; animation-delay:18s;">📡</div>
+    </div>
+
+    <!-- Header -->
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold text-primary mb-3">Tech News Service</h1>
+        <p class="lead text-muted">Stay updated with the latest tech trends and innovations</p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Main Content Card -->
+            <div class="tech-card">
+                <h3 class="mb-4">📱 Get Daily Tech News Updates</h3>
+                <p class="mb-4">Subscribe to receive the top tech news article in your inbox every day. Stay informed about the latest innovations and developments in the tech world!</p>
+                
+                <!-- How it Works Section -->
+                <div class="info-box">
+                    <h4>How the System Works</h4>
+                    <p><strong>📰 News Source:</strong> We get the most popular and relevant articles from <a href="https://news.ycombinator.com" style="color: #93C5FD;" target="_blank">Hacker News</a>, a trusted platform for tech enthusiasts.</p>
+                    <p><strong>🔍 Selection Process:</strong> The system automatically selects the highest-voted article of the day, ensuring you only receive content that the tech community finds valuable and interesting.</p>
+                    <p><strong>⏰ Delivery:</strong> Each newsletter is delivered directly to your inbox daily, keeping you consistently updated without overwhelming you with too much content.</p>
+                </div>
+            </div>
+
+            <!-- Today's Featured Article -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">📰 Today's Featured Article</h5>
+                </div>
+                <div class="card-body">
+                    {% if article_title and article_link %}
+                        <h6>{{ article_title }}</h6>
+                        <a href="{{ article_link }}" target="_blank" class="btn btn-outline-primary btn-sm">Read the full article</a>
+                    {% else %}
+                        <p class="text-muted">Preview not available. Subscribe to receive articles by email!</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Subscription Form -->
+            <div class="form-container">
+                <h3 class="text-center mb-4 text-white">Join the Newsletter</h3>
+                
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label text-white">Full Name *</label>
+                            {{ form.name }}
+                            <div class="invalid-feedback">Please provide your name.</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label text-white">Email Address *</label>
+                            {{ form.email }}
+                            <div class="invalid-feedback">Please provide a valid email.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.phone.id_for_label }}" class="form-label text-white">Phone Number</label>
+                        {{ form.phone }}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="form-check">
+                            {{ form.terms_agree }}
+                            <label class="form-check-label text-white" for="{{ form.terms_agree.id_for_label }}">
+                                I agree to receive daily tech news updates
+                            </label>
+                            <div class="invalid-feedback">You must agree to receive the newsletter.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-subscribe btn-lg">
+                            🚀 Subscribe Now
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Admin Link for Staff -->
+            {% if user.is_authenticated and user.is_staff %}
+            <div class="text-center mt-4">
+                <a href="{% url 'newsletter_admin' %}" class="btn btn-outline-warning">
+                    🔐 Admin Dashboard
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+    
+    // Email validation
+    const emailField = document.querySelector('input[type="email"]');
+    if (emailField) {
+        emailField.addEventListener('input', function() {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (this.value && !emailRegex.test(this.value)) {
+                this.setCustomValidity('Please enter a valid email address');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
