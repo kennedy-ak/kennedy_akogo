@@ -33,9 +33,8 @@ DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 ALLOWED_HOSTS = ["*"]
 CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
-    'http://localhost:8000',
-    "https://kennedy-akogo.onrender.com/"
-  ,  # Replace with your actual domain
+
+    "https://kennedy-akogo-1.onrender.com",
     # Add any other domains you're using
 ]
 
