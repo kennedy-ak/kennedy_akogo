@@ -11,4 +11,8 @@ urlpatterns = [
     path('contact/', views.contact, name='contact'),
     path('chatbot/', views.chatbot, name='chatbot'),
     path('chatbot/ask/', views.chatbot_ask, name='chatbot_ask'),
+    path('newsletter/', views.newsletter, name='newsletter'),
+    path('newsletter/admin/', views.newsletter_admin, name='newsletter_admin'),
+    path('newsletter/send/', views.send_newsletter, name='send_newsletter'),
+    path('newsletter/test/', views.send_test_newsletter, name='send_test_newsletter'),
 ]

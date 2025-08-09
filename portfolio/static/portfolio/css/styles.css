@@ -10,7 +10,7 @@ body {
 
 /* Root variables for dark mode */
 :root {
-    --bs-primary: #0d6efd;
+    --bs-primary: #8A2BE2; /* Blue Violet */
     --bs-secondary: #6c757d;
     --bs-success: #198754;
     --bs-info: #0dcaf0;
@@ -26,8 +26,8 @@ body {
     --dark-border: #333333;
     --dark-text: #ffffff;
     --dark-text-muted: #cccccc;
-    --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --hover-glow: rgba(102, 126, 234, 0.3);
+    --accent-gradient: linear-gradient(135deg, #8A2BE2 0%, #4B0082 100%); /* Blue Violet to Indigo */
+    --hover-glow: rgba(138, 43, 226, 0.3);
 }
 
 /* Dark mode styles */
@@ -229,18 +229,18 @@ body {
 }
 
 .logo-k {
-    color: #667eea;
+    color: #8A2BE2; /* Blue Violet */
     font-weight: 900;
     font-size: 1.4rem;
-    text-shadow: 0 0 15px rgba(102, 126, 234, 0.5);
+    text-shadow: 0 0 15px rgba(138, 43, 226, 0.5);
     animation: pulse-glow 2s ease-in-out infinite;
 }
 
 .logo-a {
-    color: #764ba2;
+    color: #4B0082; /* Indigo */
     font-weight: 900;
     font-size: 1.4rem;
-    text-shadow: 0 0 15px rgba(118, 75, 162, 0.5);
+    text-shadow: 0 0 15px rgba(75, 0, 130, 0.5);
     animation: pulse-glow 2s ease-in-out infinite 0.3s;
 }
 
@@ -445,6 +445,9 @@ h6 {
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
+    background-color: transparent;
+    color: var(--bs-body-color);
+    border: 1px solid var(--bs-primary);
 }
 
 .tech-stack .badge::before {
@@ -1051,5 +1054,82 @@ html {
         border-top: 1px solid var(--dark-border);
         margin-top: 0.5rem;
         padding-top: 0.5rem;
+    }
+}
+
+/* Project card improvements */
+.card-footer .d-flex {
+    gap: 0.5rem;
+}
+
+.card-footer .btn {
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+}
+
+/* Live demo button styling */
+.btn-success {
+    --bs-btn-bg: #198754;
+    --bs-btn-border-color: #198754;
+    --bs-btn-hover-bg: #157347;
+    --bs-btn-hover-border-color: #146c43;
+}
+
+/* Responsive button layout */
+@media (max-width: 576px) {
+    .card-footer .d-flex {
+        flex-direction: column;
+    }
+
+    .card-footer .btn {
+        width: 100%;
+        margin-bottom: 0.25rem;
+    }
+}
+
+/* Project detail page improvements */
+.project-links .btn {
+    margin-bottom: 0.5rem;
+    width: 100%;
+}
+
+/* Badge styling for tech stack */
+.badge {
+    background-color: var(--bs-primary) !important;
+    color: white;
+}
+
+/* Dark theme badge adjustments */
+[data-bs-theme="dark"] .badge {
+    background-color: var(--bs-info) !important;
+}
+
+/* Project image consistent sizing */
+.project-image,
+.card-img-top {
+    height: 250px;
+    object-fit: cover;
+}
+
+/* Project detail carousel images */
+.carousel-item img {
+    height: 400px;
+    object-fit: cover;
+}
+
+/* Better button spacing in project cards */
+.card-footer .d-flex.flex-wrap {
+    gap: 0.5rem;
+}
+
+.card-footer .d-flex.flex-wrap .btn {
+    flex: 1;
+    min-width: 120px;
+}
+
+@media (max-width: 768px) {
+    .card-footer .d-flex.flex-wrap .btn {
+        flex: none;
+        width: 100%;
     }
 }

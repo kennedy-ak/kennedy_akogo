@@ -54,19 +54,26 @@
                             </p>
                             <h6 class="mt-3">Technologies Used</h6>
                             <div class="tech-stack">
-                                {% for tech in project.tech_stack|split:',' %}
-                                    {% if tech.strip %}
-                                        <span class="badge bg-primary me-1 mb-1">{{ tech.strip }}</span>
-                                    {% endif %}
+                                {% for tag in project.tags.all %}
+                                    <span class="badge me-1 mb-1">{{ tag.name }}</span>
                                 {% endfor %}
                             </div>
                             
-                            {% if project.github_url %}
+                            {% if project.live_demo_url or project.github_url %}
                             <div class="mt-4">
-                                <h6>Source Code</h6>
-                                <a href="{{ project.github_url }}" class="btn btn-dark btn-sm" target="_blank" rel="noopener">
-                                    <i class="bi bi-github"></i> View on GitHub
-                                </a>
+                                <h6>Links</h6>
+                                <div class="d-flex flex-column gap-2">
+                                    {% if project.live_demo_url %}
+                                    <a href="{{ project.live_demo_url }}" class="btn btn-success btn-sm" target="_blank" rel="noopener">
+                                        <i class="bi bi-play-circle"></i> Live Demo
+                                    </a>
+                                    {% endif %}
+                                    {% if project.github_url %}
+                                    <a href="{{ project.github_url }}" class="btn btn-dark btn-sm" target="_blank" rel="noopener">
+                                        <i class="bi bi-github"></i> View on GitHub
+                                    </a>
+                                    {% endif %}
+                                </div>
                             </div>
                             {% endif %}
                         </div>
