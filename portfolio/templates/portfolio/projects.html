@@ -36,8 +36,13 @@
                     </p>
                 </div>
                 <div class="card-footer bg-white">
-                    <div class="d-flex gap-2">
+                    <div class="d-flex gap-2 flex-wrap">
                         <a href="{% url 'project_detail' project.pk %}" class="btn btn-primary">View Details</a>
+                        {% if project.live_demo_url %}
+                            <a href="{{ project.live_demo_url }}" class="btn btn-success" target="_blank" rel="noopener">
+                                <i class="bi bi-play-circle"></i> Live Demo
+                            </a>
+                        {% endif %}
                         {% if project.github_url %}
                             <a href="{{ project.github_url }}" class="btn btn-outline-secondary" target="_blank" rel="noopener">
                                 <i class="bi bi-github"></i> GitHub

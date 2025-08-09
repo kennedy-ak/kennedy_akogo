@@ -1056,3 +1056,80 @@ html {
         padding-top: 0.5rem;
     }
 }
+
+/* Project card improvements */
+.card-footer .d-flex {
+    gap: 0.5rem;
+}
+
+.card-footer .btn {
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+}
+
+/* Live demo button styling */
+.btn-success {
+    --bs-btn-bg: #198754;
+    --bs-btn-border-color: #198754;
+    --bs-btn-hover-bg: #157347;
+    --bs-btn-hover-border-color: #146c43;
+}
+
+/* Responsive button layout */
+@media (max-width: 576px) {
+    .card-footer .d-flex {
+        flex-direction: column;
+    }
+
+    .card-footer .btn {
+        width: 100%;
+        margin-bottom: 0.25rem;
+    }
+}
+
+/* Project detail page improvements */
+.project-links .btn {
+    margin-bottom: 0.5rem;
+    width: 100%;
+}
+
+/* Badge styling for tech stack */
+.badge {
+    background-color: var(--bs-primary) !important;
+    color: white;
+}
+
+/* Dark theme badge adjustments */
+[data-bs-theme="dark"] .badge {
+    background-color: var(--bs-info) !important;
+}
+
+/* Project image consistent sizing */
+.project-image,
+.card-img-top {
+    height: 250px;
+    object-fit: cover;
+}
+
+/* Project detail carousel images */
+.carousel-item img {
+    height: 400px;
+    object-fit: cover;
+}
+
+/* Better button spacing in project cards */
+.card-footer .d-flex.flex-wrap {
+    gap: 0.5rem;
+}
+
+.card-footer .d-flex.flex-wrap .btn {
+    flex: 1;
+    min-width: 120px;
+}
+
+@media (max-width: 768px) {
+    .card-footer .d-flex.flex-wrap .btn {
+        flex: none;
+        width: 100%;
+    }
+}

@@ -41,6 +41,7 @@ class Project(models.Model):
     description = models.TextField()
     tags = TaggableManager(help_text="A comma-separated list of tags.")
     github_url = models.URLField(blank=True, null=True, help_text="GitHub repository URL")
+    live_demo_url = models.URLField(blank=True, null=True, help_text="Live demo/deployment URL")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

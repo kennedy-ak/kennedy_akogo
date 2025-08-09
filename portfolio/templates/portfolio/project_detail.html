@@ -59,12 +59,21 @@
                                 {% endfor %}
                             </div>
                             
-                            {% if project.github_url %}
+                            {% if project.live_demo_url or project.github_url %}
                             <div class="mt-4">
-                                <h6>Source Code</h6>
-                                <a href="{{ project.github_url }}" class="btn btn-dark btn-sm" target="_blank" rel="noopener">
-                                    <i class="bi bi-github"></i> View on GitHub
-                                </a>
+                                <h6>Links</h6>
+                                <div class="d-flex flex-column gap-2">
+                                    {% if project.live_demo_url %}
+                                    <a href="{{ project.live_demo_url }}" class="btn btn-success btn-sm" target="_blank" rel="noopener">
+                                        <i class="bi bi-play-circle"></i> Live Demo
+                                    </a>
+                                    {% endif %}
+                                    {% if project.github_url %}
+                                    <a href="{{ project.github_url }}" class="btn btn-dark btn-sm" target="_blank" rel="noopener">
+                                        <i class="bi bi-github"></i> View on GitHub
+                                    </a>
+                                    {% endif %}
+                                </div>
                             </div>
                             {% endif %}
                         </div>
