@@ -12,6 +12,10 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,10 +25,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-8rkn)jnxuv!*=%nvm(%v#dfn)9xoqf=f7o&^9ek7f@yi-k&0v_'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fallback-key-for-development-only')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = ["*"]
 CSRF_TRUSTED_ORIGINS = [
@@ -154,16 +158,16 @@ CKEDITOR_CONFIGS = {
 }
 
 # Mnotify SMS settings
-MNOTIFY_API_KEY = 'qqYaIprq4RZ25q9JENdRqQbKZ'  # Replace with your actual API key
-ADMIN_PHONE_NUMBER = '+233557782728'  # Your phone number for notifications
+MNOTIFY_API_KEY = os.environ.get('MNOTIFY_API_KEY', '')
+ADMIN_PHONE_NUMBER = os.environ.get('ADMIN_PHONE_NUMBER', '')
 
 # Email settings for newsletter
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'kennedyakogokweku@gmail.com')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 
 # Newsletter admin password
-NEWSLETTER_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
+NEWSLETTER_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', '')

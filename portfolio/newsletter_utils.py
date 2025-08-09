@@ -1,4 +1,3 @@
-import os
 import smtplib
 import requests
 from email.mime.text import MIMEText
@@ -6,11 +5,7 @@ from email.mime.multipart import MIMEMultipart
 from bs4 import BeautifulSoup
 from django.conf import settings
 from django.utils import timezone
-from dotenv import load_dotenv
 from .models import NewsletterSubscriber, NewsletterCampaign
-
-# Load environment variables
-load_dotenv()
 
 
 def get_top_article():
@@ -71,8 +66,8 @@ def send_email(recipient, subject, message):
     Send email using SMTP
     """
     try:
-        sender_email = "kennedyakogokweku@gmail.com"
-        password = os.getenv("password", "fsjvbeaseumsruzm")  # Your Gmail app password
+        sender_email = settings.EMAIL_HOST_USER
+        password = settings.EMAIL_HOST_PASSWORD
 
         if not password:
             print("Email password not configured")
