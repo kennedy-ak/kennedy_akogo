@@ -9,9 +9,9 @@ from django.conf import settings
 # Optional imports for RAG functionality
 try:
     import numpy as np
-    from sentence_transformers import SentenceTransformer
     import faiss
     from groq import Groq
+    from openai import OpenAI
     RAG_DEPENDENCIES_AVAILABLE = True
 except ImportError as e:
     RAG_DEPENDENCIES_AVAILABLE = False
@@ -24,19 +24,23 @@ class ProjectRAGService:
     """Service for handling RAG operations for projects"""
     
     def __init__(self):
-        self.embedding_model = None
+        self.openai_client = None
         self.groq_client = None
         self._initialize_models()
     
     def _initialize_models(self):
-        """Initialize the embedding model and Groq client"""
+        """Initialize the OpenAI client and Groq client"""
         if not RAG_DEPENDENCIES_AVAILABLE:
-            logger.warning("RAG dependencies not available. Please install: pip install sentence-transformers faiss-cpu groq numpy tiktoken")
+            logger.warning("RAG dependencies not available. Please install: pip install openai faiss-cpu groq numpy tiktoken")
             return
 
         try:
-            # Initialize sentence transformer for embeddings
-            self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+            # Initialize OpenAI client for embeddings
+            openai_api_key = getattr(settings, 'OPENAI_API_KEY', None)
+            if openai_api_key:
+                self.openai_client = OpenAI(api_key=openai_api_key)
+            else:
+                logger.warning("OPENAI_API_KEY not found in settings")
 
             # Initialize Groq client
             groq_api_key = getattr(settings, 'GROQ_API_KEY', None)
@@ -159,7 +163,7 @@ class ProjectRAGService:
     
     def create_embeddings(self, chunks: List[str]) -> Tuple[Optional[object], Optional[object]]:
         """
-        Create embeddings for text chunks and build FAISS index
+        Create embeddings for text chunks and build FAISS index using OpenAI
         
         Args:
             chunks: List of text chunks
@@ -167,12 +171,21 @@ class ProjectRAGService:
         Returns:
             Tuple of (embeddings array, FAISS index)
         """
-        if not chunks or not self.embedding_model or not RAG_DEPENDENCIES_AVAILABLE:
+        if not chunks or not self.openai_client or not RAG_DEPENDENCIES_AVAILABLE:
             return None, None
         
         try:
-            # Generate embeddings
-            embeddings = self.embedding_model.encode(chunks, convert_to_numpy=True)
+            # Generate embeddings using OpenAI
+            embeddings_list = []
+            for chunk in chunks:
+                response = self.openai_client.embeddings.create(
+                    model="text-embedding-3-small",
+                    input=chunk
+                )
+                embeddings_list.append(response.data[0].embedding)
+            
+            # Convert to numpy array
+            embeddings = np.array(embeddings_list, dtype=np.float32)
             
             # Normalize embeddings for cosine similarity
             faiss.normalize_L2(embeddings)
@@ -202,12 +215,16 @@ class ProjectRAGService:
         Returns:
             List of (chunk, score) tuples
         """
-        if not query or not index or not chunks or not self.embedding_model:
+        if not query or not index or not chunks or not self.openai_client:
             return []
         
         try:
-            # Generate query embedding
-            query_embedding = self.embedding_model.encode([query], convert_to_numpy=True)
+            # Generate query embedding using OpenAI
+            response = self.openai_client.embeddings.create(
+                model="text-embedding-3-small",
+                input=query
+            )
+            query_embedding = np.array([response.data[0].embedding], dtype=np.float32)
             faiss.normalize_L2(query_embedding)
             
             # Search

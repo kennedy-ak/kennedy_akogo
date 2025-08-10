@@ -1,6 +1,21 @@
 from django.contrib import admin
 from django.utils.html import format_html
+from django.contrib import messages
 from .models import Project, ProjectImage, ProjectRAG, BlogPost, ContactMessage, NewsletterSubscriber, NewsletterCampaign
+
+# Import RAG availability check
+def check_rag_availability():
+    try:
+        import numpy as np
+        import faiss
+        from openai import OpenAI
+        from groq import Groq
+        return True
+    except Exception as e:
+        print(f"RAG dependencies not available in admin: {e}")
+        return False
+
+RAG_AVAILABLE = check_rag_availability()
 
 
 class ProjectImageInline(admin.TabularInline):
@@ -17,7 +32,7 @@ class ProjectImageInline(admin.TabularInline):
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('title', 'created_at', 'updated_at')
+    list_display = ('title', 'created_at', 'updated_at', 'rag_status')
     list_filter = ('created_at', 'updated_at')
     search_fields = ('title', 'description')
     readonly_fields = ('created_at', 'updated_at')
@@ -29,13 +44,88 @@ class ProjectAdmin(admin.ModelAdmin):
         }),
         ('Links', {
             'fields': ('github_url', 'live_demo_url'),
-            'description': 'Optional links to GitHub repository and live demo'
+            'description': 'Optional links to GitHub repository and live demo. Adding a GitHub URL will automatically set up AI discussion.'
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',)
         }),
     )
+    
+    def rag_status(self, obj):
+        """Show RAG processing status"""
+        if not obj.github_url:
+            return format_html('<span style="color: gray;">No GitHub URL</span>')
+        
+        try:
+            rag_data = obj.rag_data
+            if rag_data.is_processed:
+                return format_html('<span style="color: green;">✅ AI Ready</span>')
+            elif rag_data.processing_error:
+                return format_html('<span style="color: red;">❌ Error</span>')
+            else:
+                return format_html('<span style="color: orange;">🔄 Processing</span>')
+        except:
+            return format_html('<span style="color: gray;">🕐 Pending</span>')
+    rag_status.short_description = "AI Status"
+    
+    def save_model(self, request, obj, form, change):
+        """Custom save method to handle RAG processing"""
+        # Check if GitHub URL was added or changed
+        github_url_changed = False
+        if change:  # This is an update
+            try:
+                original_obj = Project.objects.get(pk=obj.pk)
+                github_url_changed = original_obj.github_url != obj.github_url
+            except Project.DoesNotExist:
+                github_url_changed = False
+        else:  # This is a new project
+            github_url_changed = bool(obj.github_url)
+        
+        # Save the object first
+        super().save_model(request, obj, form, change)
+        
+        # If GitHub URL was added or changed, set up RAG processing
+        if github_url_changed and obj.github_url:
+            print(f"🔄 GitHub URL added/changed for {obj.title} - setting up RAG processing")
+            
+            try:
+                # Create or update RAG data entry
+                from .models import ProjectRAG
+                rag_data, created = ProjectRAG.objects.get_or_create(
+                    project=obj,
+                    defaults={
+                        'repo_content': '',
+                        'embeddings_data': '',
+                        'is_processed': False,
+                        'processing_error': 'Queued for processing'
+                    }
+                )
+                
+                if not created:
+                    # Reset existing RAG data for reprocessing
+                    rag_data.is_processed = False
+                    rag_data.processing_error = 'Queued for reprocessing'
+                    rag_data.save()
+                
+                messages.info(request, f'🤖 AI assistant setup queued for "{obj.title}". Repository analysis will begin shortly.')
+                print(f"✅ RAG processing queued for project: {obj.title}")
+                
+                # Try to process immediately if dependencies are available
+                if RAG_AVAILABLE:
+                    try:
+                        from django.core.management import call_command
+                        call_command('process_project_rag', project_id=obj.pk)
+                        rag_data.refresh_from_db()
+                        if rag_data.is_processed:
+                            messages.success(request, f'🎉 AI assistant ready for "{obj.title}"!')
+                    except Exception as e:
+                        print(f"❌ Immediate RAG processing failed: {e}")
+                        messages.warning(request, 'AI assistant setup queued. Processing will complete in the background.')
+                        
+            except Exception as e:
+                print(f"❌ Error setting up RAG processing: {e}")
+                messages.warning(request, 'AI assistant setup encountered an issue but will retry automatically.')
 
 
 @admin.register(BlogPost)
@@ -51,7 +141,7 @@ class BlogPostAdmin(admin.ModelAdmin):
         }),
         ('Newsletter', {
             'fields': ('sent_to_newsletter',),
-            'description': 'Newsletter sending status'
+            'description': 'Check this box to automatically send this blog post to newsletter subscribers'
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
@@ -65,6 +155,53 @@ class BlogPostAdmin(admin.ModelAdmin):
         else:
             return format_html('<span style="color: orange;">📧 Not Sent</span>')
     newsletter_status.short_description = "Newsletter Status"
+    
+    def save_model(self, request, obj, form, change):
+        """Custom save method to handle newsletter sending"""
+        # Check if this is an update and sent_to_newsletter was just checked
+        was_sent_before = False
+        if change:  # This is an update, not a new creation
+            try:
+                original_obj = BlogPost.objects.get(pk=obj.pk)
+                was_sent_before = original_obj.sent_to_newsletter
+            except BlogPost.DoesNotExist:
+                was_sent_before = False
+        
+        # Save the object first
+        super().save_model(request, obj, form, change)
+        
+        # If sent_to_newsletter was just checked (changed from False to True)
+        if obj.sent_to_newsletter and not was_sent_before:
+            print(f"📧 Sending blog post '{obj.title}' to newsletter subscribers...")
+            
+            # Import the newsletter sending function
+            from .newsletter_utils import send_blog_post_newsletter
+            from django.contrib import messages
+            
+            try:
+                success_count, total_count, campaign = send_blog_post_newsletter(obj)
+                
+                if success_count > 0:
+                    message = f'✅ Blog post "{obj.title}" sent to {success_count} out of {total_count} subscribers!'
+                    messages.success(request, message)
+                    print(f"✅ {message}")
+                elif total_count == 0:
+                    message = '⚠️ No active subscribers found.'
+                    messages.warning(request, message)
+                    print(f"⚠️ {message}")
+                else:
+                    message = '❌ Failed to send blog post newsletter. Check console for details.'
+                    messages.error(request, message)
+                    print(f"❌ {message}")
+                    
+            except Exception as e:
+                error_message = f'❌ Error sending blog post newsletter: {str(e)}'
+                messages.error(request, error_message)
+                print(f"❌ {error_message}")
+                
+                # If sending failed, revert the sent_to_newsletter flag
+                obj.sent_to_newsletter = False
+                obj.save()
 
 
 @admin.register(ContactMessage)

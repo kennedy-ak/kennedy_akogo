@@ -12,16 +12,33 @@ from .newsletter_utils import get_top_article, send_welcome_email, send_newslett
 
 # Check if RAG dependencies are available
 def check_rag_availability():
-    try:
-        import numpy as np
-        import faiss
-        from sentence_transformers import SentenceTransformer
-        from groq import Groq
-        print("✅ All RAG dependencies loaded successfully!")
-        return True
-    except (ImportError, SyntaxError, Exception) as e:
-        print(f"❌ RAG dependencies failed to load: {e}")
+    """Check if RAG dependencies are available with detailed error reporting"""
+    required_packages = {
+        'numpy': 'import numpy as np',
+        'faiss': 'import faiss',
+        'openai': 'from openai import OpenAI',
+        'groq': 'from groq import Groq',
+        'tiktoken': 'import tiktoken'
+    }
+    
+    failed_packages = []
+    
+    for package_name, import_statement in required_packages.items():
+        try:
+            exec(import_statement)
+            print(f"✅ {package_name}: OK")
+        except Exception as e:
+            print(f"❌ {package_name}: {e}")
+            failed_packages.append(package_name)
+    
+    if failed_packages:
+        print(f"❌ Failed packages: {', '.join(failed_packages)}")
+        if 'openai' in failed_packages:
+            print("💡 To fix openai: pip install openai")
         return False
+    
+    print("✅ All RAG dependencies loaded successfully!")
+    return True
 
 RAG_AVAILABLE = check_rag_availability()
 print(f"RAG_AVAILABLE = {RAG_AVAILABLE}")
@@ -162,27 +179,88 @@ def chatbot(request):
 def project_chatbot(request, pk):
     """Project-specific RAG chatbot page"""
     project = get_object_or_404(Project, pk=pk)
-
-    # Check if RAG functionality is available
-    if not RAG_AVAILABLE:
-        messages.error(request, 'The project discussion feature is currently unavailable. Please contact the administrator.')
-        return redirect('project_detail', pk=pk)
+    print(f"🤖 Project chatbot request for: {project.title} (ID: {pk})")
 
     # Check if project has GitHub URL
+    print(f"🔗 GitHub URL: {project.github_url}")
     if not project.github_url:
+        print("❌ No GitHub URL - redirecting")
         messages.error(request, 'This project does not have a GitHub repository for discussion.')
         return redirect('project_detail', pk=pk)
+
+    # Check if RAG functionality is available
+    print(f"🔍 RAG_AVAILABLE: {RAG_AVAILABLE}")
+    if not RAG_AVAILABLE:
+        print("❌ RAG dependencies not available - providing fallback chatbot")
+        messages.warning(request, 'Advanced AI analysis is currently unavailable. Using basic project information for discussion.')
+        
+        # Use fallback chatbot without RAG
+        return render(request, 'portfolio/project_chatbot.html', {
+            'project': project,
+            'fallback_mode': True
+        })
 
     # Check if RAG data exists and is processed
     try:
         rag_data = project.rag_data
+        print(f"📊 RAG data exists: True, is_processed: {rag_data.is_processed}")
         if not rag_data.is_processed:
-            messages.warning(request, 'The project repository is still being processed. Please try again later.')
-            return redirect('project_detail', pk=pk)
+            print("🔄 RAG data not processed - starting processing")
+            messages.info(request, 'Preparing AI assistant for this project. Please wait while we analyze the repository...')
+            
+            # Process RAG data in the background
+            try:
+                from django.core.management import call_command
+                call_command('process_project_rag', project_id=pk)
+                
+                # Re-check if processing completed
+                rag_data.refresh_from_db()
+                if rag_data.is_processed:
+                    messages.success(request, 'AI assistant is ready! You can now ask questions about this project.')
+                else:
+                    messages.warning(request, 'Repository analysis is in progress. Please try again in a few minutes.')
+                    return redirect('project_detail', pk=pk)
+            except Exception as e:
+                print(f"❌ Error processing RAG data: {e}")
+                messages.error(request, 'Failed to analyze repository. Please try again later.')
+                return redirect('project_detail', pk=pk)
+                
     except ProjectRAG.DoesNotExist:
-        messages.warning(request, 'The project repository is being prepared for discussion. Please try again later.')
-        return redirect('project_detail', pk=pk)
+        print("❌ No RAG data exists - creating and processing")
+        messages.info(request, 'Setting up AI assistant for this project. Analyzing repository...')
+        
+        try:
+            # Create RAG data entry
+            ProjectRAG.objects.create(
+                project=project,
+                repo_content='',
+                embeddings_data='',
+                is_processed=False
+            )
+            
+            # Process RAG data
+            from django.core.management import call_command
+            call_command('process_project_rag', project_id=pk)
+            
+            # Check if processing completed
+            try:
+                rag_data = project.rag_data
+                rag_data.refresh_from_db()
+                if rag_data.is_processed:
+                    messages.success(request, 'AI assistant is ready! You can now ask questions about this project.')
+                else:
+                    messages.warning(request, 'Repository analysis is in progress. Please try again in a few minutes.')
+                    return redirect('project_detail', pk=pk)
+            except:
+                messages.error(request, 'Failed to analyze repository. Please try again later.')
+                return redirect('project_detail', pk=pk)
+                
+        except Exception as e:
+            print(f"❌ Error creating/processing RAG data: {e}")
+            messages.error(request, 'Failed to set up AI assistant. Please try again later.')
+            return redirect('project_detail', pk=pk)
 
+    print("✅ All checks passed - rendering project chatbot page")
     return render(request, 'portfolio/project_chatbot.html', {
         'project': project
     })
@@ -206,8 +284,22 @@ def project_chatbot_ask(request, pk):
 
         # Check if RAG functionality is available
         if not RAG_AVAILABLE:
+            # Provide basic fallback response using project information
+            basic_response = f"""I can help you with general questions about the **{project.title}** project.
+
+**Project Description:**
+{project.description}
+
+**Technologies Used:** {', '.join([tag.name for tag in project.tags.all()])}
+
+**Repository:** {project.github_url}
+
+Since advanced code analysis is currently unavailable, I can provide general information about the project. For specific code questions, please visit the GitHub repository directly.
+
+What would you like to know about this project?"""
+            
             return JsonResponse({
-                'response': 'The project discussion feature is currently unavailable. Please contact the administrator.',
+                'response': basic_response,
                 'status': 'success'
             })
 
@@ -411,14 +503,39 @@ def newsletter_admin(request):
 def send_newsletter(request):
     """Send newsletter to all subscribers"""
     try:
+        print("🚀 Newsletter send request received")
+        
+        # Check email configuration first
+        from django.conf import settings
+        print(f"📧 Email config check - USER: {bool(settings.EMAIL_HOST_USER)}, PASSWORD: {bool(settings.EMAIL_HOST_PASSWORD)}")
+        
+        if not settings.EMAIL_HOST_USER:
+            print("❌ EMAIL_HOST_USER not configured")
+            messages.error(request, '❌ EMAIL_HOST_USER not configured. Please add your Gmail address to .env file.')
+            return redirect('newsletter_admin')
+
+        if not settings.EMAIL_HOST_PASSWORD:
+            print("❌ EMAIL_HOST_PASSWORD not configured")
+            messages.error(request, '❌ EMAIL_HOST_PASSWORD not configured. Please add your Gmail app password to .env file.')
+            return redirect('newsletter_admin')
+
+        print("📬 Calling send_newsletter_to_all...")
         success_count, total_count, campaign = send_newsletter_to_all()
+        print(f"📊 Results received: {success_count}/{total_count}")
 
         if success_count > 0:
+            print(f"✅ Newsletter sent successfully to {success_count} subscribers")
             messages.success(request, f'✅ Successfully sent {success_count} out of {total_count} emails!')
+        elif total_count == 0:
+            print("⚠️ No active subscribers found")
+            messages.warning(request, '⚠️ No active subscribers found.')
         else:
-            messages.error(request, '❌ Failed to send emails. Please check your email configuration.')
+            print("❌ All emails failed to send")
+            messages.error(request, '❌ Failed to send emails. Check the console for detailed error messages.')
 
     except Exception as e:
+        print(f"❌ Exception in send_newsletter view: {e}")
+        print(f"❌ Exception type: {type(e).__name__}")
         messages.error(request, f'Error sending newsletter: {str(e)}')
 
     return redirect('newsletter_admin')
@@ -431,6 +548,16 @@ def send_blog_post_to_newsletter(request, blog_id):
     try:
         blog_post = get_object_or_404(BlogPost, id=blog_id)
 
+        # Check email configuration first
+        from django.conf import settings
+        if not settings.EMAIL_HOST_USER:
+            messages.error(request, '❌ EMAIL_HOST_USER not configured. Please add your Gmail address to .env file.')
+            return redirect('newsletter_admin')
+
+        if not settings.EMAIL_HOST_PASSWORD:
+            messages.error(request, '❌ EMAIL_HOST_PASSWORD not configured. Please add your Gmail app password to .env file.')
+            return redirect('newsletter_admin')
+
         # Check if already sent
         if blog_post.sent_to_newsletter:
             messages.warning(request, f'📧 Blog post "{blog_post.title}" has already been sent to newsletter subscribers.')
@@ -441,8 +568,10 @@ def send_blog_post_to_newsletter(request, blog_id):
 
         if success_count > 0:
             messages.success(request, f'✅ Successfully sent "{blog_post.title}" to {success_count} out of {total_count} subscribers!')
+        elif total_count == 0:
+            messages.warning(request, '⚠️ No active subscribers found.')
         else:
-            messages.error(request, '❌ Failed to send blog post newsletter. Please check your email configuration.')
+            messages.error(request, '❌ Failed to send blog post newsletter. Check the console for detailed error messages.')
 
     except Exception as e:
         messages.error(request, f'Error sending blog post newsletter: {str(e)}')
