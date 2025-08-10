@@ -31,10 +31,12 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fallback-key-for-deve
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = ["*"]
+# Get allowed hosts from environment variable or use default
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,kennedy-akogo-1.onrender.com').split(',')
+
 CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
-
+    'http://localhost:8000',
     "https://kennedy-akogo-1.onrender.com",
     # Add any other domains you're using
 ]
@@ -57,6 +59,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # For serving static files in production
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -88,20 +91,31 @@ WSGI_APPLICATION = 'personal_site.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Supabase PostgreSQL Configuration
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv("SUPABASE_DB_NAME"),
-        'USER': os.getenv("SUPABASE_DB_USER"),
-        'PASSWORD': os.getenv("SUPABASE_DB_PASSWORD"),
-        'HOST': os.getenv("SUPABASE_DB_HOST"),
-        'PORT': os.getenv("SUPABASE_DB_PORT"),
-        'OPTIONS': {
-            'sslmode': 'require'
+import dj_database_url
+
+# Database configuration with fallback for local development
+DATABASE_URL = os.getenv('DATABASE_URL')
+
+if DATABASE_URL:
+    # Use DATABASE_URL for production (Render, Heroku, etc.)
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=True)
+    }
+else:
+    # Fallback to individual Supabase environment variables for local development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv("SUPABASE_DB_NAME"),
+            'USER': os.getenv("SUPABASE_DB_USER"),
+            'PASSWORD': os.getenv("SUPABASE_DB_PASSWORD"),
+            'HOST': os.getenv("SUPABASE_DB_HOST"),
+            'PORT': os.getenv("SUPABASE_DB_PORT"),
+            'OPTIONS': {
+                'sslmode': 'require'
+            }
         }
     }
-}
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
@@ -143,6 +157,9 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
+# WhiteNoise configuration for serving static files in production
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -183,8 +200,19 @@ NEWSLETTER_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', '')
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 
 # Groq API Configuration for RAG chatbot
-GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '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')
+GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
 
 # Site domain for absolute URLs in emails
 SITE_DOMAIN = os.environ.get('SITE_DOMAIN', 'http://127.0.0.1:8000')
-OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+
+# Security settings for production
+if not DEBUG:
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_REDIRECT_EXEMPT = []
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_PRELOAD = True
