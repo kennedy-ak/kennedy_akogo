@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: personal-site
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn personal_site.wsgi:application"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: personal-site-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
+
+databases:
+  - name: personal-site-db
+    databaseName: personal_site
+    user: personal_site_user
