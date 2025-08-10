@@ -146,7 +146,7 @@
                     
                     <form method="post" action="{% url 'send_newsletter' %}" class="mb-4" id="sendNewsletterForm">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-send w-100 mb-3" id="sendNewsletterBtn" onclick="return confirm('Are you sure you want to send the newsletter to all {{ subscriber_count }} subscribers?')">
+                        <button type="submit" class="btn btn-send w-100 mb-3" id="sendNewsletterBtn">
                             📧 Send to All {{ subscriber_count }} Subscribers
                         </button>
                     </form>
@@ -233,6 +233,73 @@
         </div>
     </div>
 
+    <!-- Blog Posts Section -->
+    {% if recent_blog_posts %}
+    <div class="card mt-4">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">📝 Send Blog Posts to Newsletter</h4>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-3">Send your latest blog posts to newsletter subscribers with a snippet and "read more" link.</p>
+
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Created</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for blog_post in recent_blog_posts %}
+                        <tr>
+                            <td>
+                                <strong>{{ blog_post.title }}</strong>
+                                <br>
+                                <small class="text-muted">{{ blog_post.content|striptags|truncatewords:20 }}</small>
+                            </td>
+                            <td>{{ blog_post.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                {% if blog_post.sent_to_newsletter %}
+                                    <span class="badge bg-success">✅ Sent</span>
+                                {% else %}
+                                    <span class="badge bg-warning">📧 Not Sent</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if not blog_post.sent_to_newsletter %}
+                                    <form method="post" action="{% url 'send_blog_post_to_newsletter' blog_post.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-success"
+                                                onclick="return confirm('Send this blog post to {{ subscriber_count }} subscribers?')">
+                                            📤 Send to Newsletter
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <span class="text-muted">Already sent</span>
+                                {% endif %}
+                                <a href="{% url 'blog_detail' blog_post.slug %}" class="btn btn-sm btn-outline-primary ms-1" target="_blank">
+                                    👁️ View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if not recent_blog_posts %}
+            <div class="text-center py-4">
+                <h5 class="text-muted">No blog posts available</h5>
+                <p class="text-muted">Create some blog posts to send them to your newsletter subscribers!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Recent Campaigns -->
     {% if recent_campaigns %}
     <div class="card mt-4">
@@ -287,18 +354,35 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add loading state to send buttons
     const sendButtons = document.querySelectorAll('button[type="submit"]');
     sendButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function(e) {
+            // Don't prevent default form submission
             const originalText = this.innerHTML;
-            this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
-            this.disabled = true;
             
-            // Re-enable after 5 seconds as fallback
+            // Add loading state after a short delay to allow form submission
+            setTimeout(() => {
+                this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+                this.disabled = true;
+            }, 100);
+            
+            // Re-enable after 10 seconds as fallback
             setTimeout(() => {
                 this.innerHTML = originalText;
                 this.disabled = false;
-            }, 5000);
+            }, 10000);
         });
     });
+    
+    // Add confirmation for main newsletter send button
+    const mainSendBtn = document.getElementById('sendNewsletterBtn');
+    if (mainSendBtn) {
+        mainSendBtn.addEventListener('click', function(e) {
+            const subscriberCount = '{{ subscriber_count }}';
+            if (!confirm(`Are you sure you want to send the newsletter to all ${subscriberCount} subscribers?`)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    }
 });
 </script>
 {% endblock %}

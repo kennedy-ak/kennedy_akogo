@@ -6,9 +6,42 @@ from django.views.decorators.http import require_http_methods
 from django.conf import settings
 import json
 import requests
-from .models import Project, BlogPost, ContactMessage, NewsletterSubscriber, NewsletterCampaign
+from .models import Project, BlogPost, ContactMessage, NewsletterSubscriber, NewsletterCampaign, ProjectRAG
 from .forms import ContactForm, NewsletterSubscriptionForm
-from .newsletter_utils import get_top_article, send_welcome_email, send_newsletter_to_all, send_test_email
+from .newsletter_utils import get_top_article, send_welcome_email, send_newsletter_to_all, send_test_email, send_blog_post_newsletter
+
+# Check if RAG dependencies are available
+def check_rag_availability():
+    """Check if RAG dependencies are available with detailed error reporting"""
+    required_packages = {
+        'numpy': 'import numpy as np',
+        'faiss': 'import faiss',
+        'openai': 'from openai import OpenAI',
+        'groq': 'from groq import Groq',
+        'tiktoken': 'import tiktoken'
+    }
+    
+    failed_packages = []
+    
+    for package_name, import_statement in required_packages.items():
+        try:
+            exec(import_statement)
+            print(f"✅ {package_name}: OK")
+        except Exception as e:
+            print(f"❌ {package_name}: {e}")
+            failed_packages.append(package_name)
+    
+    if failed_packages:
+        print(f"❌ Failed packages: {', '.join(failed_packages)}")
+        if 'openai' in failed_packages:
+            print("💡 To fix openai: pip install openai")
+        return False
+    
+    print("✅ All RAG dependencies loaded successfully!")
+    return True
+
+RAG_AVAILABLE = check_rag_availability()
+print(f"RAG_AVAILABLE = {RAG_AVAILABLE}")
 
 
 def send_contact_notification_sms(contact_message):
@@ -143,6 +176,218 @@ def chatbot(request):
     return render(request, 'portfolio/chatbot.html')
 
 
+def project_chatbot(request, pk):
+    """Project-specific RAG chatbot page"""
+    project = get_object_or_404(Project, pk=pk)
+    print(f"🤖 Project chatbot request for: {project.title} (ID: {pk})")
+
+    # Check if project has GitHub URL
+    print(f"🔗 GitHub URL: {project.github_url}")
+    if not project.github_url:
+        print("❌ No GitHub URL - redirecting")
+        messages.error(request, 'This project does not have a GitHub repository for discussion.')
+        return redirect('project_detail', pk=pk)
+
+    # Check if RAG functionality is available
+    print(f"🔍 RAG_AVAILABLE: {RAG_AVAILABLE}")
+    if not RAG_AVAILABLE:
+        print("❌ RAG dependencies not available - providing fallback chatbot")
+        messages.warning(request, 'Advanced AI analysis is currently unavailable. Using basic project information for discussion.')
+        
+        # Use fallback chatbot without RAG
+        return render(request, 'portfolio/project_chatbot.html', {
+            'project': project,
+            'fallback_mode': True
+        })
+
+    # Check if RAG data exists and is processed
+    try:
+        rag_data = project.rag_data
+        print(f"📊 RAG data exists: True, is_processed: {rag_data.is_processed}")
+        if not rag_data.is_processed:
+            print("🔄 RAG data not processed - starting processing")
+            messages.info(request, 'Preparing AI assistant for this project. Please wait while we analyze the repository...')
+            
+            # Process RAG data in the background
+            try:
+                from django.core.management import call_command
+                call_command('process_project_rag', project_id=pk)
+                
+                # Re-check if processing completed
+                rag_data.refresh_from_db()
+                if rag_data.is_processed:
+                    messages.success(request, 'AI assistant is ready! You can now ask questions about this project.')
+                else:
+                    messages.warning(request, 'Repository analysis is in progress. Please try again in a few minutes.')
+                    return redirect('project_detail', pk=pk)
+            except Exception as e:
+                print(f"❌ Error processing RAG data: {e}")
+                messages.error(request, 'Failed to analyze repository. Please try again later.')
+                return redirect('project_detail', pk=pk)
+                
+    except ProjectRAG.DoesNotExist:
+        print("❌ No RAG data exists - creating and processing")
+        messages.info(request, 'Setting up AI assistant for this project. Analyzing repository...')
+        
+        try:
+            # Create RAG data entry
+            ProjectRAG.objects.create(
+                project=project,
+                repo_content='',
+                embeddings_data='',
+                is_processed=False
+            )
+            
+            # Process RAG data
+            from django.core.management import call_command
+            call_command('process_project_rag', project_id=pk)
+            
+            # Check if processing completed
+            try:
+                rag_data = project.rag_data
+                rag_data.refresh_from_db()
+                if rag_data.is_processed:
+                    messages.success(request, 'AI assistant is ready! You can now ask questions about this project.')
+                else:
+                    messages.warning(request, 'Repository analysis is in progress. Please try again in a few minutes.')
+                    return redirect('project_detail', pk=pk)
+            except:
+                messages.error(request, 'Failed to analyze repository. Please try again later.')
+                return redirect('project_detail', pk=pk)
+                
+        except Exception as e:
+            print(f"❌ Error creating/processing RAG data: {e}")
+            messages.error(request, 'Failed to set up AI assistant. Please try again later.')
+            return redirect('project_detail', pk=pk)
+
+    print("✅ All checks passed - rendering project chatbot page")
+    return render(request, 'portfolio/project_chatbot.html', {
+        'project': project
+    })
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def project_chatbot_ask(request, pk):
+    """Handle project-specific RAG chatbot queries"""
+    try:
+        project = get_object_or_404(Project, pk=pk)
+        data = json.loads(request.body)
+        user_message = data.get('message', '')
+        chat_history = data.get('chat_history', [])
+
+        if not user_message:
+            return JsonResponse({
+                'error': 'No message provided',
+                'status': 'error'
+            }, status=400)
+
+        # Check if RAG functionality is available
+        if not RAG_AVAILABLE:
+            # Provide basic fallback response using project information
+            basic_response = f"""I can help you with general questions about the **{project.title}** project.
+
+**Project Description:**
+{project.description}
+
+**Technologies Used:** {', '.join([tag.name for tag in project.tags.all()])}
+
+**Repository:** {project.github_url}
+
+Since advanced code analysis is currently unavailable, I can provide general information about the project. For specific code questions, please visit the GitHub repository directly.
+
+What would you like to know about this project?"""
+            
+            return JsonResponse({
+                'response': basic_response,
+                'status': 'success'
+            })
+
+        # Check if RAG data exists and is processed
+        try:
+            rag_data = project.rag_data
+            if not rag_data.is_processed:
+                return JsonResponse({
+                    'response': 'The project repository is still being processed. Please try again later.',
+                    'status': 'success'
+                })
+        except ProjectRAG.DoesNotExist:
+            return JsonResponse({
+                'response': 'The project repository data is not available. Please contact the administrator.',
+                'status': 'success'
+            })
+
+        # Import RAG dependencies locally
+        try:
+            import numpy as np
+            import faiss
+            from .rag_service import ProjectRAGService
+        except (ImportError, SyntaxError, Exception) as e:
+            return JsonResponse({
+                'response': f'The RAG system is currently unavailable due to dependency issues: {str(e)}',
+                'status': 'success'
+            })
+
+        # Initialize RAG service
+        rag_service = ProjectRAGService()
+
+        # Get embeddings data
+        embeddings_data = rag_data.get_embeddings_data()
+        if not embeddings_data:
+            return JsonResponse({
+                'response': 'Sorry, there was an issue accessing the project data. Please try again later.',
+                'status': 'success'
+            })
+
+        # Reconstruct FAISS index
+        chunks = embeddings_data.get('chunks', [])
+        embeddings_list = embeddings_data.get('embeddings', [])
+
+        if not chunks or not embeddings_list:
+            return JsonResponse({
+                'response': 'Sorry, the project data is incomplete. Please contact the administrator.',
+                'status': 'success'
+            })
+
+        # Convert embeddings back to numpy array
+        embeddings = np.array(embeddings_list, dtype=np.float32)
+
+        # Create FAISS index
+        dimension = embeddings.shape[1]
+        index = faiss.IndexFlatIP(dimension)
+        index.add(embeddings)
+
+        # Search for relevant chunks
+        similar_chunks = rag_service.search_similar_chunks(
+            user_message, index, chunks, top_k=5
+        )
+
+        if not similar_chunks:
+            return JsonResponse({
+                'response': f'I couldn\'t find relevant information about "{user_message}" in the {project.title} repository. Could you try rephrasing your question or ask about specific files, functions, or features?',
+                'status': 'success'
+            })
+
+        # Extract just the chunk text for context
+        context_chunks = [chunk for chunk, _ in similar_chunks]
+
+        # Generate response using Groq with chat history
+        response = rag_service.generate_response_with_groq(
+            user_message, context_chunks, project.title, chat_history
+        )
+
+        return JsonResponse({
+            'response': response,
+            'status': 'success'
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            'error': str(e),
+            'status': 'error'
+        }, status=500)
+
+
 @csrf_exempt
 @require_http_methods(["POST"])
 def chatbot_ask(request):
@@ -232,6 +477,9 @@ def newsletter_admin(request):
     subscribers = NewsletterSubscriber.objects.filter(is_active=True)
     recent_campaigns = NewsletterCampaign.objects.all()[:5]
 
+    # Get recent blog posts
+    recent_blog_posts = BlogPost.objects.all()[:10]
+
     # Get today's article for preview
     try:
         article_title, article_link = get_top_article()
@@ -242,6 +490,7 @@ def newsletter_admin(request):
         'subscribers': subscribers,
         'subscriber_count': subscribers.count(),
         'recent_campaigns': recent_campaigns,
+        'recent_blog_posts': recent_blog_posts,
         'article_title': article_title,
         'article_link': article_link
     }
@@ -254,15 +503,78 @@ def newsletter_admin(request):
 def send_newsletter(request):
     """Send newsletter to all subscribers"""
     try:
+        print("🚀 Newsletter send request received")
+        
+        # Check email configuration first
+        from django.conf import settings
+        print(f"📧 Email config check - USER: {bool(settings.EMAIL_HOST_USER)}, PASSWORD: {bool(settings.EMAIL_HOST_PASSWORD)}")
+        
+        if not settings.EMAIL_HOST_USER:
+            print("❌ EMAIL_HOST_USER not configured")
+            messages.error(request, '❌ EMAIL_HOST_USER not configured. Please add your Gmail address to .env file.')
+            return redirect('newsletter_admin')
+
+        if not settings.EMAIL_HOST_PASSWORD:
+            print("❌ EMAIL_HOST_PASSWORD not configured")
+            messages.error(request, '❌ EMAIL_HOST_PASSWORD not configured. Please add your Gmail app password to .env file.')
+            return redirect('newsletter_admin')
+
+        print("📬 Calling send_newsletter_to_all...")
         success_count, total_count, campaign = send_newsletter_to_all()
+        print(f"📊 Results received: {success_count}/{total_count}")
 
         if success_count > 0:
+            print(f"✅ Newsletter sent successfully to {success_count} subscribers")
             messages.success(request, f'✅ Successfully sent {success_count} out of {total_count} emails!')
+        elif total_count == 0:
+            print("⚠️ No active subscribers found")
+            messages.warning(request, '⚠️ No active subscribers found.')
         else:
-            messages.error(request, '❌ Failed to send emails. Please check your email configuration.')
+            print("❌ All emails failed to send")
+            messages.error(request, '❌ Failed to send emails. Check the console for detailed error messages.')
 
     except Exception as e:
+        print(f"❌ Exception in send_newsletter view: {e}")
+        print(f"❌ Exception type: {type(e).__name__}")
         messages.error(request, f'Error sending newsletter: {str(e)}')
+
+    return redirect('newsletter_admin')
+
+
+@newsletter_admin_login_required
+@require_http_methods(["POST"])
+def send_blog_post_to_newsletter(request, blog_id):
+    """Send a specific blog post to newsletter subscribers"""
+    try:
+        blog_post = get_object_or_404(BlogPost, id=blog_id)
+
+        # Check email configuration first
+        from django.conf import settings
+        if not settings.EMAIL_HOST_USER:
+            messages.error(request, '❌ EMAIL_HOST_USER not configured. Please add your Gmail address to .env file.')
+            return redirect('newsletter_admin')
+
+        if not settings.EMAIL_HOST_PASSWORD:
+            messages.error(request, '❌ EMAIL_HOST_PASSWORD not configured. Please add your Gmail app password to .env file.')
+            return redirect('newsletter_admin')
+
+        # Check if already sent
+        if blog_post.sent_to_newsletter:
+            messages.warning(request, f'📧 Blog post "{blog_post.title}" has already been sent to newsletter subscribers.')
+            return redirect('newsletter_admin')
+
+        # Send to newsletter subscribers
+        success_count, total_count, campaign = send_blog_post_newsletter(blog_post)
+
+        if success_count > 0:
+            messages.success(request, f'✅ Successfully sent "{blog_post.title}" to {success_count} out of {total_count} subscribers!')
+        elif total_count == 0:
+            messages.warning(request, '⚠️ No active subscribers found.')
+        else:
+            messages.error(request, '❌ Failed to send blog post newsletter. Check the console for detailed error messages.')
+
+    except Exception as e:
+        messages.error(request, f'Error sending blog post newsletter: {str(e)}')
 
     return redirect('newsletter_admin')
 

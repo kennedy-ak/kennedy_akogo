@@ -63,14 +63,22 @@ def get_top_article():
 
 def send_email(recipient, subject, message):
     """
-    Send email using SMTP
+    Send email using SMTP with detailed error logging
     """
     try:
         sender_email = settings.EMAIL_HOST_USER
         password = settings.EMAIL_HOST_PASSWORD
 
+        print(f"📧 Attempting to send email to: {recipient}")
+        print(f"📧 Sender email: {sender_email}")
+        print(f"📧 Password configured: {'Yes' if password else 'No'}")
+
+        if not sender_email:
+            print("❌ EMAIL_HOST_USER not configured")
+            return False
+
         if not password:
-            print("Email password not configured")
+            print("❌ EMAIL_HOST_PASSWORD not configured")
             return False
 
         email_message = MIMEMultipart()
@@ -80,13 +88,35 @@ def send_email(recipient, subject, message):
 
         email_message.attach(MIMEText(message, "plain"))
 
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(sender_email, password)
-            server.send_message(email_message)
+        print(f"📧 Connecting to SMTP server...")
+        if getattr(settings, 'EMAIL_USE_SSL', False):
+            # Use SSL (port 465)
+            with smtplib.SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT) as server:
+                print(f"📧 Logging in...")
+                server.login(sender_email, password)
+                print(f"📧 Sending message...")
+                server.send_message(email_message)
+        elif getattr(settings, 'EMAIL_USE_TLS', False):
+            # Use TLS (port 587)
+            with smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT) as server:
+                server.starttls()
+                print(f"📧 Logging in...")
+                server.login(sender_email, password)
+                print(f"📧 Sending message...")
+                server.send_message(email_message)
+        else:
+            # Plain SMTP connection (not recommended for production)
+            with smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT) as server:
+                print(f"📧 Logging in...")
+                server.login(sender_email, password)
+                print(f"📧 Sending message...")
+                server.send_message(email_message)
 
+        print(f"✅ Email sent successfully to {recipient}")
         return True
     except Exception as e:
-        print(f"Error sending email to {recipient}: {e}")
+        print(f"❌ Error sending email to {recipient}: {e}")
+        print(f"❌ Error type: {type(e).__name__}")
         return False
 
 
@@ -137,11 +167,19 @@ def send_newsletter_to_all():
     """
     try:
         subscribers = NewsletterSubscriber.objects.filter(is_active=True)
+        print(f"📊 Found {subscribers.count()} active subscribers")
+        
+        if subscribers.count() == 0:
+            print("⚠️ No active subscribers found!")
+            return 0, 0, None
+            
         article_title, article_link = get_top_article()
+        print(f"📰 Article: {article_title}")
         
         subject = "Top Tech News Article"
         success_count = 0
         total_count = subscribers.count()
+        failed_emails = []
         
         # Create campaign record
         campaign = NewsletterCampaign.objects.create(
@@ -153,7 +191,9 @@ def send_newsletter_to_all():
             total_sent=total_count
         )
         
-        for subscriber in subscribers:
+        for i, subscriber in enumerate(subscribers, 1):
+            print(f"📧 Sending to {i}/{total_count}: {subscriber.email}")
+            
             personalized_message = f"""Hi {subscriber.name},
 
 🔥 Today's Top Tech News
@@ -177,16 +217,99 @@ You're receiving this because you subscribed to Kennedy's Tech News Newsletter.
 
             if send_email(subscriber.email, subject, personalized_message):
                 success_count += 1
+                print(f"✅ Success {success_count}/{total_count}")
+            else:
+                failed_emails.append(subscriber.email)
+                print(f"❌ Failed to send to {subscriber.email}")
         
         # Update campaign with results
         campaign.success_count = success_count
         campaign.sent_at = timezone.now()
         campaign.save()
         
+        print(f"📊 Final Results: {success_count}/{total_count} emails sent successfully")
+        if failed_emails:
+            print(f"❌ Failed emails: {', '.join(failed_emails)}")
+        
         return success_count, total_count, campaign
         
     except Exception as e:
-        print(f"Error sending newsletter: {e}")
+        print(f"❌ Error in send_newsletter_to_all: {e}")
+        print(f"❌ Error type: {type(e).__name__}")
+        return 0, 0, None
+
+
+def send_blog_post_newsletter(blog_post):
+    """
+    Send a blog post to all newsletter subscribers
+    """
+    try:
+        from .models import NewsletterSubscriber, NewsletterCampaign
+        from django.utils import timezone
+
+        subscribers = NewsletterSubscriber.objects.filter(is_active=True)
+
+        if not subscribers.exists():
+            return 0, 0, None
+
+        # Get blog post details
+        blog_title = blog_post.title
+        blog_snippet = blog_post.get_snippet(word_limit=40)
+        blog_url = blog_post.get_absolute_url()
+
+        subject = f"New Blog Post: {blog_title}"
+        success_count = 0
+        total_count = subscribers.count()
+
+        # Create campaign record
+        campaign = NewsletterCampaign.objects.create(
+            title=f"Blog Post: {blog_title}",
+            subject=subject,
+            content=f"Blog post snippet: {blog_snippet}\nRead more at: {blog_url}",
+            article_title=blog_title,
+            article_link=blog_url,
+            total_sent=total_count
+        )
+
+        for subscriber in subscribers:
+            personalized_message = f"""Hi {subscriber.name},
+
+📝 New Blog Post from Kennedy Akogo
+
+{blog_title}
+
+{blog_snippet}
+
+🔗 Read the full article: {blog_url}
+
+I hope you find this article insightful and valuable. Your feedback and thoughts are always welcome!
+
+Best regards,
+Kennedy Akogo
+AI/LLM Engineer
+
+---
+You're receiving this because you subscribed to Kennedy's Tech News Newsletter.
+If you no longer wish to receive these updates, please contact us.
+
+"""
+
+            if send_email(subscriber.email, subject, personalized_message):
+                success_count += 1
+
+        # Update campaign with results
+        campaign.success_count = success_count
+        campaign.sent_at = timezone.now()
+        campaign.save()
+
+        # Mark blog post as sent to newsletter
+        blog_post.sent_to_newsletter = True
+        blog_post.save()
+
+        return success_count, total_count, campaign
+
+    except Exception as e:
+        print(f"Error sending blog post newsletter: {e}")
         return 0, 0, None
 
 
