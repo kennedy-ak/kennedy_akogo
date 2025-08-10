@@ -34,6 +34,10 @@ DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 # Get allowed hosts from environment variable or use default
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,kennedy-akogo-1.onrender.com,https://kennedy-akogo.onrender.com').split(',')
 
+ALLOWED_HOSTS= [
+    "https://kennedy-akogo.onrender.com/"
+]
+
 CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://localhost:8000',
@@ -94,29 +98,12 @@ WSGI_APPLICATION = 'personal_site.wsgi.application'
 
 import dj_database_url
 
-# Database configuration with fallback for local development
+# Database configuration using Railway PostgreSQL
 DATABASE_URL = os.getenv('DATABASE_URL')
 
-if DATABASE_URL:
-    # Use DATABASE_URL for production (Render, Heroku, etc.)
-    DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=True)
-    }
-else:
-    # Fallback to individual Supabase environment variables for local development
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv("SUPABASE_DB_NAME"),
-            'USER': os.getenv("SUPABASE_DB_USER"),
-            'PASSWORD': os.getenv("SUPABASE_DB_PASSWORD"),
-            'HOST': os.getenv("SUPABASE_DB_HOST"),
-            'PORT': os.getenv("SUPABASE_DB_PORT"),
-            'OPTIONS': {
-                'sslmode': 'require'
-            }
-        }
-    }
+DATABASES = {
+    'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=True)
+}
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
@@ -217,3 +204,8 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_PRELOAD = True
+
+    X_FRAME_OPTIONS = 'DENY'
+    SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+
+

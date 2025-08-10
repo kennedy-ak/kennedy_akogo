@@ -54,9 +54,9 @@ Your `DATABASE_URL` should be in this format:
 postgresql://username:password@host:port/database
 ```
 
-For Supabase, it looks like:
+For Railway PostgreSQL, it looks like:
 ```
-postgresql://postgres.uprvdfnnyekqwopdsgrj:Akogo66022.@aws-0-eu-north-1.pooler.supabase.com:6543/postgres
+postgresql://postgres:FZidpyKPOFGwFhqTZSHMAHtaDnHaDAAT@metro.proxy.rlwy.net:11269/railway
 ```
 
 ### 5. Deploy
