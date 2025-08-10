@@ -37,7 +37,7 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,kennedy-ako
 CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://localhost:8000',
-    "https://kennedy-akogo-1.onrender.com",
+    "https://kennedy-akogo.onrender.com",
     # Add any other domains you're using
 ]
 
