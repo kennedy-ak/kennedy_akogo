@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
+
 # Load environment variables from .env file
 load_dotenv()
 
@@ -87,14 +88,20 @@ WSGI_APPLICATION = 'personal_site.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# Supabase PostgreSQL Configuration
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv("SUPABASE_DB_NAME"),
+        'USER': os.getenv("SUPABASE_DB_USER"),
+        'PASSWORD': os.getenv("SUPABASE_DB_PASSWORD"),
+        'HOST': os.getenv("SUPABASE_DB_HOST"),
+        'PORT': os.getenv("SUPABASE_DB_PORT"),
+        'OPTIONS': {
+            'sslmode': 'require'
+        }
     }
 }
-
-
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
@@ -170,3 +177,9 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 
 # Newsletter admin password
 NEWSLETTER_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', '')
+
+# Groq API Configuration for RAG chatbot
+GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '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')
+
+# Site domain for absolute URLs in emails
+SITE_DOMAIN = os.environ.get('SITE_DOMAIN', 'http://127.0.0.1:8000')

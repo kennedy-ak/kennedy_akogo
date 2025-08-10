@@ -190,6 +190,80 @@ You're receiving this because you subscribed to Kennedy's Tech News Newsletter.
         return 0, 0, None
 
 
+def send_blog_post_newsletter(blog_post):
+    """
+    Send a blog post to all newsletter subscribers
+    """
+    try:
+        from .models import NewsletterSubscriber, NewsletterCampaign
+        from django.utils import timezone
+
+        subscribers = NewsletterSubscriber.objects.filter(is_active=True)
+
+        if not subscribers.exists():
+            return 0, 0, None
+
+        # Get blog post details
+        blog_title = blog_post.title
+        blog_snippet = blog_post.get_snippet(word_limit=40)
+        blog_url = blog_post.get_absolute_url()
+
+        subject = f"New Blog Post: {blog_title}"
+        success_count = 0
+        total_count = subscribers.count()
+
+        # Create campaign record
+        campaign = NewsletterCampaign.objects.create(
+            title=f"Blog Post: {blog_title}",
+            subject=subject,
+            content=f"Blog post snippet: {blog_snippet}\nRead more at: {blog_url}",
+            article_title=blog_title,
+            article_link=blog_url,
+            total_sent=total_count
+        )
+
+        for subscriber in subscribers:
+            personalized_message = f"""Hi {subscriber.name},
+
+📝 New Blog Post from Kennedy Akogo
+
+{blog_title}
+
+{blog_snippet}
+
+🔗 Read the full article: {blog_url}
+
+I hope you find this article insightful and valuable. Your feedback and thoughts are always welcome!
+
+Best regards,
+Kennedy Akogo
+AI/LLM Engineer
+
+---
+You're receiving this because you subscribed to Kennedy's Tech News Newsletter.
+If you no longer wish to receive these updates, please contact us.
+
+"""
+
+            if send_email(subscriber.email, subject, personalized_message):
+                success_count += 1
+
+        # Update campaign with results
+        campaign.success_count = success_count
+        campaign.sent_at = timezone.now()
+        campaign.save()
+
+        # Mark blog post as sent to newsletter
+        blog_post.sent_to_newsletter = True
+        blog_post.save()
+
+        return success_count, total_count, campaign
+
+    except Exception as e:
+        print(f"Error sending blog post newsletter: {e}")
+        return 0, 0, None
+
+
 def send_test_email(test_email):
     """
     Send test newsletter to specified email
