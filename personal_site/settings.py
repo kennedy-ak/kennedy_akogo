@@ -93,29 +93,12 @@ WSGI_APPLICATION = 'personal_site.wsgi.application'
 
 import dj_database_url
 
-# Database configuration with fallback for local development
+# Database configuration using Railway PostgreSQL
 DATABASE_URL = os.getenv('DATABASE_URL')
 
-if DATABASE_URL:
-    # Use DATABASE_URL for production (Render, Heroku, etc.)
-    DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=True)
-    }
-else:
-    # Fallback to individual Supabase environment variables for local development
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv("SUPABASE_DB_NAME"),
-            'USER': os.getenv("SUPABASE_DB_USER"),
-            'PASSWORD': os.getenv("SUPABASE_DB_PASSWORD"),
-            'HOST': os.getenv("SUPABASE_DB_HOST"),
-            'PORT': os.getenv("SUPABASE_DB_PORT"),
-            'OPTIONS': {
-                'sslmode': 'require'
-            }
-        }
-    }
+DATABASES = {
+    'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=True)
+}
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
