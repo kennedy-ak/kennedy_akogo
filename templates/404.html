@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Page Not Found - Portfolio{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 text-center">
+            <div class="error-content">
+                <div class="error-code mb-4">
+                    <h1 class="display-1 fw-bold text-primary">404</h1>
+                </div>
+                
+                <div class="error-message mb-4">
+                    <h2 class="mb-3">Oops! Page Not Found</h2>
+                    <p class="lead text-muted mb-4">
+                        The page you're looking for doesn't exist or has been moved. 
+                        Don't worry, it happens to the best of us!
+                    </p>
+                </div>
+                
+                <div class="error-illustration mb-5">
+                    <i class="bi bi-exclamation-triangle display-1 text-warning opacity-50"></i>
+                </div>
+                
+                <div class="error-actions">
+                    <a href="{% url 'home' %}" class="btn btn-primary btn-lg me-3">
+                        <i class="bi bi-house-door me-2"></i>Back to Home
+                    </a>
+                    <a href="javascript:history.back()" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-arrow-left me-2"></i>Go Back
+                    </a>
+                </div>
+                
+                <div class="helpful-links mt-5">
+                    <h5 class="mb-3">Try these instead:</h5>
+                    <div class="row g-3 justify-content-center">
+                        <div class="col-auto">
+                            <a href="{% url 'projects' %}" class="btn btn-outline-primary">
+                                <i class="bi bi-folder-fill me-1"></i>Projects
+                            </a>
+                        </div>
+                        <div class="col-auto">
+                            <a href="{% url 'blog' %}" class="btn btn-outline-primary">
+                                <i class="bi bi-journal-text me-1"></i>Blog
+                            </a>
+                        </div>
+                        <div class="col-auto">
+                            <a href="{% url 'contact' %}" class="btn btn-outline-primary">
+                                <i class="bi bi-envelope me-1"></i>Contact
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-content {
+    padding: 2rem 0;
+}
+
+.error-code h1 {
+    font-size: 8rem;
+    background: linear-gradient(45deg, var(--bs-primary), var(--bs-info));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.error-illustration {
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+.error-actions .btn {
+    transition: all 0.3s ease;
+}
+
+.error-actions .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.helpful-links .btn {
+    margin: 0.25rem;
+    transition: all 0.3s ease;
+}
+
+.helpful-links .btn:hover {
+    transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+    .error-code h1 {
+        font-size: 5rem;
+    }
+    
+    .error-actions .btn {
+        display: block;
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+    
+    .helpful-links .col-auto {
+        flex: 1;
+    }
+    
+    .helpful-links .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

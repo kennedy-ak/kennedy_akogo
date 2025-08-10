@@ -34,6 +34,10 @@ DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 # Get allowed hosts from environment variable or use default
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,kennedy-akogo-1.onrender.com').split(',')
 
+ALLOWED_HOSTS= [
+    "https://kennedy-akogo.onrender.com/"
+]
+
 CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://localhost:8000',
@@ -199,3 +203,5 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_PRELOAD = True
+    X_FRAME_OPTIONS = 'DENY'
+    SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
