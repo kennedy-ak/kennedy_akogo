@@ -290,7 +290,7 @@ AI/LLM Engineer
 
 ---
 You're receiving this because you subscribed to Kennedy's Tech News Newsletter.
-If you no longer wish to receive these updates, please contact us.
+If you no longer wish to receive these updates, please contact me.
 
 """
 

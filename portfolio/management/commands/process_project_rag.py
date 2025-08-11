@@ -122,6 +122,13 @@ class Command(BaseCommand):
             project_rag.set_embeddings_data(embeddings_data)
             project_rag.is_processed = True
             
+            # Final check that project still exists before saving
+            if not Project.objects.filter(id=project.id).exists():
+                self.stdout.write(
+                    self.style.ERROR(f'Project {project.id} was deleted during processing')
+                )
+                return
+            
             with transaction.atomic():
                 project_rag.save()
             
@@ -135,10 +142,17 @@ class Command(BaseCommand):
             
             # Update error state
             try:
-                project_rag.processing_error = error_msg
-                project_rag.is_processed = False
-                project_rag.save()
-            except:
+                # Check if project still exists before updating ProjectRAG
+                if Project.objects.filter(id=project.id).exists():
+                    project_rag.processing_error = error_msg
+                    project_rag.is_processed = False
+                    project_rag.save()
+                else:
+                    self.stdout.write(
+                        self.style.WARNING(f'Project {project.id} was deleted, skipping error update')
+                    )
+            except Exception as save_error:
+                logger.error(f'Failed to save error state: {save_error}')
                 pass
             
             self.stdout.write(self.style.ERROR(f'  {error_msg}'))

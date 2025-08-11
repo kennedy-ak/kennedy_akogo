@@ -32,11 +32,10 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fallback-key-for-deve
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
 # Get allowed hosts from environment variable or use default
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,kennedy-akogo-1.onrender.com,https://kennedy-akogo.onrender.com').split(',')
-
-ALLOWED_HOSTS= [
-    "https://kennedy-akogo.onrender.com/"
-]
+ALLOWED_HOSTS = ["*"]
+# ALLOWED_HOSTS= [
+#     "https://kennedy-akogo.onrender.com/"
+# ]
 
 CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
