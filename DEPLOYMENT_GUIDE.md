@@ -45,6 +45,9 @@ MNOTIFY_API_KEY=your-mnotify-key
 ADMIN_PHONE_NUMBER=+233557782727
 ADMIN_PASSWORD=your-admin-password
 SITE_DOMAIN=https://your-render-domain.onrender.com
+CLOUDINARY_CLOUD_NAME=your-cloudinary-cloud-name
+CLOUDINARY_API_KEY=your-cloudinary-api-key
+CLOUDINARY_API_SECRET=your-cloudinary-api-secret
 ```
 
 ### 4. Database Configuration
@@ -89,13 +92,31 @@ Make sure all required environment variables are set in Render:
 - `DATABASE_URL`: Your Supabase connection string
 - `ALLOWED_HOSTS`: Your Render domain
 
+### 5. Media Storage (Important!)
+
+**Blog images disappearing?** This is because Render uses ephemeral storage.
+
+Set up Cloudinary for persistent image storage:
+
+1. Create free [Cloudinary account](https://cloudinary.com/)
+2. Get your credentials from dashboard
+3. Add to Render environment variables:
+   ```
+   CLOUDINARY_CLOUD_NAME=your-cloud-name
+   CLOUDINARY_API_KEY=your-api-key
+   CLOUDINARY_API_SECRET=your-api-secret
+   ```
+4. Test with: `python test_cloudinary_setup.py`
+
+See `CLOUDINARY_SETUP_GUIDE.md` for detailed instructions.
+
 ## Post-Deployment
 
 1. Run migrations: Your build script handles this automatically
 2. Create a superuser: You may need to do this via Render's shell
 3. Test all functionality including:
    - Portfolio pages
-   - Blog functionality
+   - Blog functionality (upload images to test Cloudinary)
    - Newsletter subscription
    - Contact forms
    - RAG chatbot
