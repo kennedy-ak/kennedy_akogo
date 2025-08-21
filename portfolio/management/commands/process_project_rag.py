@@ -56,7 +56,8 @@ class Command(BaseCommand):
                 defaults={
                     'repo_content': '',
                     'embeddings_data': '',
-                    'is_processed': False
+                    'is_processed': False,
+                    'processing_status': 'pending'
                 }
             )
             

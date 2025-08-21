@@ -102,7 +102,16 @@ import dj_database_url
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 DATABASES = {
-    'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=True)
+    'default': dj_database_url.parse(
+        DATABASE_URL, 
+        conn_max_age=600, 
+        ssl_require=True,
+        conn_health_checks=True,
+        options={
+            'MAX_CONNS': 20,
+            'MIN_CONNS': 5,
+        } if DATABASE_URL else {}
+    )
 }
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -210,6 +219,33 @@ GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
 
 # Site domain for absolute URLs in emails
 SITE_DOMAIN = os.environ.get('SITE_DOMAIN', 'http://127.0.0.1:8000')
+
+# Redis configuration
+REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+
+# Celery Configuration
+CELERY_BROKER_URL = REDIS_URL
+CELERY_RESULT_BACKEND = REDIS_URL
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+CELERY_ENABLE_UTC = True
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_WORKER_MAX_TASKS_PER_CHILD = 50
+
+# Redis Cache Configuration  
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': REDIS_URL,
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
 
 # Security settings for production
 if not DEBUG:

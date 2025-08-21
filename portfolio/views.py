@@ -235,12 +235,13 @@ def project_chatbot(request, pk):
                 project=project,
                 repo_content='',
                 embeddings_data='',
-                is_processed=False
+                is_processed=False,
+                processing_status='pending'
             )
             
-            # Process RAG data
-            from django.core.management import call_command
-            call_command('process_project_rag', project_id=pk)
+            # Process RAG data asynchronously
+            from .tasks import process_project_rag_async
+            process_project_rag_async.delay(project.id)
             
             # Check if processing completed
             try:
@@ -268,7 +269,7 @@ def project_chatbot(request, pk):
 
 @csrf_exempt
 @require_http_methods(["POST"])
-def project_chatbot_ask(request, pk):
+async def project_chatbot_ask(request, pk):
     """Handle project-specific RAG chatbot queries"""
     try:
         project = get_object_or_404(Project, pk=pk)
@@ -390,7 +391,7 @@ What would you like to know about this project?"""
 
 @csrf_exempt
 @require_http_methods(["POST"])
-def chatbot_ask(request):
+async def chatbot_ask(request):
     try:
         data = json.loads(request.body)
         user_message = data.get('message', '')

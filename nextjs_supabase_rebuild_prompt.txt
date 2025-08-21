@@ -1,0 +1,326 @@
+# Personal Portfolio Website Rebuild: Django to Next.js + Supabase
+
+## Project Overview
+Build a modern, full-stack personal portfolio website using Next.js 14+ (App Router) as the frontend framework and Supabase as the backend-as-a-service. This should replicate all functionality from the existing Django-based portfolio system while leveraging modern web technologies for better performance, scalability, and developer experience.
+
+## Core Requirements
+
+### Tech Stack
+- **Frontend**: Next.js 14+ with App Router, TypeScript, Tailwind CSS
+- **Backend**: Supabase (PostgreSQL database, Auth, Edge Functions, Storage)
+- **Authentication**: Supabase Auth with email/password and social providers
+- **Deployment**: Vercel (frontend) + Supabase (backend services)
+- **Additional Tools**: 
+  - React Hook Form + Zod for form validation
+  - Framer Motion for animations
+  - React Query/TanStack Query for data fetching
+  - Radix UI or shadcn/ui for component library
+
+## Database Schema (Supabase)
+
+### Core Tables
+
+1. **profiles** (extends auth.users)
+```sql
+- id (uuid, references auth.users)
+- name (text)
+- email (text)
+- phone (text, optional)
+- is_admin (boolean, default false)
+- created_at (timestamp)
+- updated_at (timestamp)
+```
+
+2. **projects**
+```sql
+- id (uuid, primary key)
+- title (text, required)
+- description (text, required)
+- tags (text[], array of tags)
+- github_url (text, optional)
+- live_demo_url (text, optional)
+- created_at (timestamp)
+- updated_at (timestamp)
+- is_featured (boolean, default false)
+```
+
+3. **project_images**
+```sql
+- id (uuid, primary key)
+- project_id (uuid, foreign key to projects)
+- image_url (text, Supabase storage URL)
+- alt_text (text, optional)
+- order_index (integer, for ordering)
+```
+
+4. **blog_posts**
+```sql
+- id (uuid, primary key)
+- title (text, required)
+- slug (text, unique, auto-generated)
+- content (text, rich text/markdown)
+- cover_image_url (text, optional)
+- created_at (timestamp)
+- updated_at (timestamp)
+- is_published (boolean, default false)
+- sent_to_newsletter (boolean, default false)
+```
+
+5. **newsletter_subscribers**
+```sql
+- id (uuid, primary key)
+- name (text, required)
+- email (text, unique, required)
+- phone (text, optional)
+- is_active (boolean, default true)
+- subscribed_at (timestamp)
+```
+
+6. **newsletter_campaigns**
+```sql
+- id (uuid, primary key)
+- title (text, required)
+- subject (text, required)
+- content (text, required)
+- article_title (text, optional)
+- article_link (text, optional)
+- sent_at (timestamp, optional)
+- total_sent (integer, default 0)
+- success_count (integer, default 0)
+- created_at (timestamp)
+```
+
+7. **contact_messages**
+```sql
+- id (uuid, primary key)
+- name (text, required)
+- email (text, required)
+- message (text, required)
+- created_at (timestamp)
+- is_read (boolean, default false)
+```
+
+8. **project_rag_data**
+```sql
+- id (uuid, primary key)
+- project_id (uuid, foreign key to projects)
+- repo_content (text, optional)
+- embeddings_data (jsonb, optional)
+- last_updated (timestamp)
+- is_processed (boolean, default false)
+- processing_error (text, optional)
+```
+
+## Key Features to Implement
+
+### 1. Public Portfolio Pages
+- **Home Page**: Hero section, featured projects (3), recent blog posts (3)
+- **Projects Page**: Grid/list view of all projects with filtering by tags
+- **Project Detail Page**: Individual project showcase with images, description, tech stack, GitHub/live demo links
+- **Blog Page**: List of published blog posts with pagination
+- **Blog Post Detail**: Individual blog post with rich content display
+- **Contact Page**: Contact form with validation and submission
+- **Services Page**: Static page describing offered services
+
+### 2. Project RAG Chatbot System
+- **Project-specific AI Chat**: Each project has an AI assistant that can answer questions about the codebase
+- **GitHub Integration**: Fetch repository content using Gitingest API or GitHub API
+- **Vector Embeddings**: Generate and store embeddings for code chunks using OpenAI embeddings API
+- **Vector Search**: Implement similarity search using Supabase's pgvector extension
+- **AI Responses**: Generate contextual responses using OpenAI GPT or Groq API
+- **Chat History**: Maintain conversation context within sessions
+- **Fallback Mode**: Basic project info when RAG system is unavailable
+
+### 3. Newsletter System
+- **Subscription Management**: User subscription with double opt-in
+- **Newsletter Admin Dashboard**: 
+  - View all subscribers
+  - Send newsletters manually
+  - Send blog posts to subscribers
+  - View campaign statistics
+  - Test email functionality
+- **Automated Content**: Fetch top articles from Hacker News API
+- **Email Templates**: Responsive HTML email templates
+- **Email Service Integration**: Use Resend, SendGrid, or similar for reliable email delivery
+- **Welcome Emails**: Automated welcome sequence for new subscribers
+
+### 4. Admin Panel
+- **Authentication**: Secure admin login using Supabase Auth
+- **Content Management**: 
+  - Create/edit/delete projects
+  - Upload project images
+  - Create/edit/publish blog posts
+  - Rich text editor (Tiptap or similar)
+- **Newsletter Management**: Full CRUD operations for campaigns and subscribers
+- **Contact Messages**: View and manage contact form submissions
+- **Analytics Dashboard**: Basic usage statistics
+
+### 5. Advanced Features
+
+#### SMS Notifications
+- **Contact Form Alerts**: SMS notifications when new messages are received
+- **Integration**: Use Twilio, mNotify, or similar SMS service
+- **Configuration**: Admin configurable phone numbers and message templates
+
+#### Real-time Features
+- **Live Chat**: Optional real-time chat using Supabase Realtime
+- **Notification System**: Real-time admin notifications for new contacts/subscribers
+
+#### Performance Optimizations
+- **Image Optimization**: Next.js Image component with Supabase Storage
+- **Caching**: React Query for client-side caching, Redis for server-side if needed
+- **SEO**: Complete meta tags, Open Graph, JSON-LD structured data
+- **PWA**: Progressive Web App capabilities
+
+## Technical Implementation Details
+
+### Frontend Architecture (Next.js)
+
+#### App Structure
+```
+app/
+├── (admin)/
+│   ├── admin/
+│   │   ├── dashboard/
+│   │   ├── projects/
+│   │   ├── blog/
+│   │   ├── newsletter/
+│   │   └── messages/
+├── (public)/
+│   ├── page.tsx (home)
+│   ├── projects/
+│   │   ├── page.tsx
+│   │   └── [id]/
+│   │       ├── page.tsx
+│   │       └── chat/
+├── blog/
+│   ├── page.tsx
+│   └── [slug]/
+├── contact/
+├── services/
+├── newsletter/
+├── api/
+│   ├── contact/
+│   ├── newsletter/
+│   ├── chat/
+│   └── rag/
+```
+
+#### Key Components
+- **Layout Components**: Header, Footer, Navigation
+- **UI Components**: Cards, Forms, Modals, Loading states
+- **Feature Components**: ProjectCard, BlogCard, ContactForm, NewsletterForm
+- **Admin Components**: DataTables, Forms, Charts, File uploaders
+- **Chat Components**: ChatInterface, MessageBubble, TypingIndicator
+
+### Backend Implementation (Supabase)
+
+#### Database Setup
+- Enable Row Level Security (RLS) on all tables
+- Create policies for public read access and admin write access
+- Set up automatic timestamps with triggers
+- Configure foreign key relationships with proper cascading
+
+#### Edge Functions
+- **Newsletter Sender**: Scheduled function to send newsletters
+- **RAG Processor**: Function to process repository content and generate embeddings
+- **Contact Notifier**: Function to send SMS notifications for new contacts
+- **Analytics Collector**: Function to collect and process usage analytics
+
+#### Storage Buckets
+- **project-images**: Store project screenshots and media
+- **blog-images**: Store blog post cover images and content images
+- **profile-images**: Store user profile pictures
+
+### Security Considerations
+- **Input Validation**: Zod schemas for all forms and API endpoints
+- **Rate Limiting**: Implement rate limiting for API endpoints
+- **CORS Configuration**: Proper CORS setup for API routes
+- **Environment Variables**: Secure handling of API keys and secrets
+- **SQL Injection Prevention**: Use Supabase's built-in parameterized queries
+- **XSS Protection**: Sanitize user-generated content
+
+### Performance Requirements
+- **Core Web Vitals**: Optimize for LCP < 2.5s, FID < 100ms, CLS < 0.1
+- **Image Optimization**: WebP/AVIF support, responsive images
+- **Code Splitting**: Dynamic imports for non-critical components
+- **Bundle Size**: Keep JavaScript bundle under 500KB
+- **Caching Strategy**: Implement proper cache headers and strategies
+
+### Deployment Configuration
+
+#### Environment Variables
+```
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
+# AI Services
+OPENAI_API_KEY=
+GROQ_API_KEY=
+
+# Email Service
+RESEND_API_KEY=
+
+# SMS Service
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_PHONE_NUMBER=
+
+# External APIs
+HACKER_NEWS_API_URL=https://news.ycombinator.com/news
+GITINGEST_API_URL=https://gitingest.com/api/ingest
+```
+
+#### Vercel Deployment
+- Configure automatic deployments from main branch
+- Set up preview deployments for pull requests
+- Configure environment variables in Vercel dashboard
+- Set up domain and SSL certificates
+
+## Migration Strategy
+
+### Data Migration
+1. **Export Data**: Create scripts to export data from Django models
+2. **Transform Data**: Convert Django model data to Supabase schema format
+3. **Import Data**: Use Supabase client to bulk insert transformed data
+4. **File Migration**: Move uploaded files from Django media to Supabase Storage
+
+### Feature Parity Checklist
+- [ ] Home page with featured content
+- [ ] Complete project showcase
+- [ ] Blog system with rich content
+- [ ] Contact form with notifications
+- [ ] Newsletter subscription and management
+- [ ] Admin authentication and dashboard
+- [ ] Project RAG chatbot functionality
+- [ ] Email campaign management
+- [ ] SMS notification system
+- [ ] Responsive design across devices
+
+## Testing Strategy
+- **Unit Tests**: Jest + React Testing Library for components
+- **Integration Tests**: Playwright for end-to-end testing
+- **API Testing**: Supertest for API endpoint testing
+- **Performance Testing**: Lighthouse CI for performance monitoring
+- **Security Testing**: Regular security audits and dependency updates
+
+## Success Metrics
+- **Performance**: Core Web Vitals in green zone
+- **User Experience**: Smooth navigation and interactions
+- **Admin Efficiency**: Streamlined content management
+- **Reliability**: 99.9% uptime with proper error handling
+- **Scalability**: Handle 10x current traffic without performance degradation
+
+## Additional Considerations
+
+### Accessibility
+- **WCAG 2.1 AA Compliance**: Implement proper ARIA labels, keyboard navigation
+- **Screen Reader Support**: Semantic HTML and proper heading hierarchy
+- **Color Contrast**: Ensure minimum 4.5:1 contrast ratio
+
+### Analytics and Monitoring
+- **Web Analytics**: Google Analytics 4 or Plausible
+- **Error Monitoring**: Sentry for error tracking and performance monitoring
+- **User Feedback**: Implement feedback collection mechanisms
