@@ -84,6 +84,7 @@ def migrate_blog_images():
                     folder="blog_covers",
                     resource_type="image",
                     overwrite=True
+                    
                 )
                 
                 print(f"   ✅ Uploaded successfully!")
@@ -103,7 +104,7 @@ def migrate_blog_images():
             except Exception as e:
                 print(f"   ❌ Failed to migrate: {e}")
                 failed += 1
-            
+
             print()
         
         print("📊 Migration Summary")

@@ -99,20 +99,34 @@ WSGI_APPLICATION = 'personal_site.wsgi.application'
 import dj_database_url
 
 # Database configuration using Railway PostgreSQL
-DATABASE_URL = os.getenv('DATABASE_URL')
+# 
 
+# if DATABASE_URL:
+#     DATABASES = {
+#         'default': dj_database_url.parse(
+#             DATABASE_URL,
+#             conn_max_age=600,
+#             ssl_require=True,
+#             conn_health_checks=True,
+#         )
+#     }
+#     # Add valid PostgreSQL connection options
+#     DATABASES['default']['OPTIONS'] = {
+#         'sslmode': 'require',
+#     }
+# else:
+#     # Fallback to SQLite for local development
+#     DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.sqlite3',
+#             'NAME': BASE_DIR / 'db.sqlite3',
+#         }
+#     }
+DATABASE_URL = os.getenv('DATABASE_URL')
 DATABASES = {
-    'default': dj_database_url.parse(
-        DATABASE_URL, 
-        conn_max_age=600, 
-        ssl_require=True,
-        conn_health_checks=True,
-        options={
-            'MAX_CONNS': 20,
-            'MIN_CONNS': 5,
-        } if DATABASE_URL else {}
-    )
+    'default': dj_database_url.parse(DATABASE_URL)
 }
+# 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
@@ -220,12 +234,9 @@ GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
 # Site domain for absolute URLs in emails
 SITE_DOMAIN = os.environ.get('SITE_DOMAIN', 'http://127.0.0.1:8000')
 
-# Redis configuration
-REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
-
 # Celery Configuration
-CELERY_BROKER_URL = REDIS_URL
-CELERY_RESULT_BACKEND = REDIS_URL
+CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
@@ -236,16 +247,38 @@ CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 CELERY_WORKER_MAX_TASKS_PER_CHILD = 50
 
-# Redis Cache Configuration  
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': REDIS_URL,
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+# Cache Configuration
+REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+
+# Use Redis cache if available, otherwise use local memory cache
+if os.environ.get('REDIS_URL'):
+    try:
+        import django_redis
+        CACHES = {
+            'default': {
+                'BACKEND': 'django_redis.cache.RedisCache',
+                'LOCATION': REDIS_URL,
+                'OPTIONS': {
+                    'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                }
+            }
+        }
+    except ImportError:
+        # Fallback to local memory cache if django_redis is not available
+        CACHES = {
+            'default': {
+                'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+                'LOCATION': 'unique-snowflake',
+            }
+        }
+else:
+    # Use local memory cache for development
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'unique-snowflake',
         }
     }
-}
 
 # Security settings for production
 if not DEBUG:

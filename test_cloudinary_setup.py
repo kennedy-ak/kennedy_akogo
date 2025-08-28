@@ -33,6 +33,7 @@ def test_cloudinary_config():
         print("- CLOUDINARY_CLOUD_NAME")
         print("- CLOUDINARY_API_KEY") 
         print("- CLOUDINARY_API_SECRET")
+
         return False
     
     return True
