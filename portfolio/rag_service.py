@@ -1,4 +1,6 @@
 import requests
+import aiohttp
+import asyncio
 import json
 import logging
 from typing import List, Dict, Tuple, Optional
@@ -102,6 +104,59 @@ class ProjectRAGService:
                 
         except Exception as e:
             logger.error(f"Error fetching repo content: {e}")
+            return None
+    
+    async def fetch_repo_content_async(self, github_url: str, timeout: int = 60) -> Optional[str]:
+        """
+        Async version: Fetch repository content using Gitingest API
+        
+        Args:
+            github_url: GitHub repository URL
+            timeout: Request timeout in seconds
+            
+        Returns:
+            Repository content as text or None if failed
+        """
+        try:
+            # Extract repo path from GitHub URL
+            repo_path = self._extract_repo_path(github_url)
+            if not repo_path:
+                logger.error(f"Could not extract repo path from URL: {github_url}")
+                return None
+            
+            # Gitingest API endpoint
+            gitingest_url = f"https://gitingest.com/api/ingest"
+
+            # Make request to Gitingest
+            payload = {
+                "input_text": github_url,
+                "max_file_size": 102400,  # 100KB max file size
+                "include_patterns": [],
+                "exclude_patterns": [
+                    "*.pyc", "*.pyo", "*.pyd", "__pycache__/*",
+                    "*.so", "*.dylib", "*.dll",
+                    "node_modules/*", ".git/*", ".vscode/*", ".idea/*",
+                    "*.log", "*.tmp", "*.temp",
+                    "*.jpg", "*.jpeg", "*.png", "*.gif", "*.bmp", "*.svg",
+                    "*.pdf", "*.doc", "*.docx", "*.xls", "*.xlsx",
+                    "*.zip", "*.tar", "*.gz", "*.rar",
+                    "dist/*", "build/*", "target/*",
+                    ".env", ".env.*"
+                ]
+            }
+            
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as session:
+                async with session.post(gitingest_url, json=payload) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        return result.get('content', '')
+                    else:
+                        error_text = await response.text()
+                        logger.error(f"Gitingest API error: {response.status} - {error_text}")
+                        return None
+                        
+        except Exception as e:
+            logger.error(f"Error fetching repo content async: {e}")
             return None
     
     def _extract_repo_path(self, github_url: str) -> Optional[str]:

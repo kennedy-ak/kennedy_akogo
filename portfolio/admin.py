@@ -98,7 +98,8 @@ class ProjectAdmin(admin.ModelAdmin):
                         'repo_content': '',
                         'embeddings_data': '',
                         'is_processed': False,
-                        'processing_error': 'Queued for processing'
+                        'processing_error': 'Queued for processing',
+                        'processing_status': 'pending'
                     }
                 )
                 
@@ -111,17 +112,14 @@ class ProjectAdmin(admin.ModelAdmin):
                 messages.info(request, f'🤖 AI assistant setup queued for "{obj.title}". Repository analysis will begin shortly.')
                 print(f"✅ RAG processing queued for project: {obj.title}")
                 
-                # Try to process immediately if dependencies are available
-                if RAG_AVAILABLE:
-                    try:
-                        from django.core.management import call_command
-                        call_command('process_project_rag', project_id=obj.pk)
-                        rag_data.refresh_from_db()
-                        if rag_data.is_processed:
-                            messages.success(request, f'🎉 AI assistant ready for "{obj.title}"!')
-                    except Exception as e:
-                        print(f"❌ Immediate RAG processing failed: {e}")
-                        messages.warning(request, 'AI assistant setup queued. Processing will complete in the background.')
+                # Queue async processing
+                try:
+                    from .tasks import process_project_rag_async
+                    process_project_rag_async.delay(obj.id)
+                    messages.success(request, f'🚀 AI assistant queued for "{obj.title}". Processing will complete in the background.')
+                except Exception as e:
+                    print(f"❌ Failed to queue RAG processing: {e}")
+                    messages.warning(request, 'AI assistant setup encountered an issue but will retry automatically.')
                         
             except Exception as e:
                 print(f"❌ Error setting up RAG processing: {e}")

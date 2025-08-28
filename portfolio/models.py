@@ -71,6 +71,19 @@ class ProjectRAG(models.Model):
     last_updated = models.DateTimeField(auto_now=True)
     is_processed = models.BooleanField(default=False)
     processing_error = models.TextField(blank=True, null=True)
+    processing_status = models.CharField(
+        max_length=20,
+        choices=[
+            ('pending', 'Pending'),
+            ('fetching', 'Fetching Repository'),
+            ('chunking', 'Processing Content'),
+            ('embedding', 'Creating Embeddings'),
+            ('completed', 'Completed'),
+            ('failed', 'Failed')
+        ],
+        default='pending'
+    )
+    progress_percentage = models.IntegerField(default=0, help_text='Processing progress (0-100)')
 
     def __str__(self):
         return f"RAG data for {self.project.title}"
