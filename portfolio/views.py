@@ -172,242 +172,243 @@ def contact(request):
     })
 
 
-def chatbot(request):
-    return render(request, 'portfolio/chatbot.html')
+# def chatbot(request):
+#     return render(request, 'portfolio/chatbot.html')
 
 
-def project_chatbot(request, pk):
-    """Project-specific RAG chatbot page"""
-    project = get_object_or_404(Project, pk=pk)
-    print(f"🤖 Project chatbot request for: {project.title} (ID: {pk})")
-
-    # Check if project has GitHub URL
-    print(f"🔗 GitHub URL: {project.github_url}")
-    if not project.github_url:
-        print("❌ No GitHub URL - redirecting")
-        messages.error(request, 'This project does not have a GitHub repository for discussion.')
-        return redirect('project_detail', pk=pk)
-
-    # Check if RAG functionality is available
-    print(f"🔍 RAG_AVAILABLE: {RAG_AVAILABLE}")
-    if not RAG_AVAILABLE:
-        print("❌ RAG dependencies not available - providing fallback chatbot")
-        messages.warning(request, 'Advanced AI analysis is currently unavailable. Using basic project information for discussion.')
-        
-        # Use fallback chatbot without RAG
-        return render(request, 'portfolio/project_chatbot.html', {
-            'project': project,
-            'fallback_mode': True
-        })
-
-    # Check if RAG data exists and is processed
-    try:
-        rag_data = project.rag_data
-        print(f"📊 RAG data exists: True, is_processed: {rag_data.is_processed}")
-        if not rag_data.is_processed:
-            print("🔄 RAG data not processed - starting processing")
-            messages.info(request, 'Preparing AI assistant for this project. Please wait while we analyze the repository...')
-            
-            # Process RAG data in the background
-            try:
-                from django.core.management import call_command
-                call_command('process_project_rag', project_id=pk)
-                
-                # Re-check if processing completed
-                rag_data.refresh_from_db()
-                if rag_data.is_processed:
-                    messages.success(request, 'AI assistant is ready! You can now ask questions about this project.')
-                else:
-                    messages.warning(request, 'Repository analysis is in progress. Please try again in a few minutes.')
-                    return redirect('project_detail', pk=pk)
-            except Exception as e:
-                print(f"❌ Error processing RAG data: {e}")
-                messages.error(request, 'Failed to analyze repository. Please try again later.')
-                return redirect('project_detail', pk=pk)
-                
-    except ProjectRAG.DoesNotExist:
-        print("❌ No RAG data exists - creating and processing")
-        messages.info(request, 'Setting up AI assistant for this project. Analyzing repository...')
-        
-        try:
-            # Create RAG data entry
-            ProjectRAG.objects.create(
-                project=project,
-                repo_content='',
-                embeddings_data='',
-                is_processed=False,
-                processing_status='pending'
-            )
-            
-            # Process RAG data asynchronously
-            from .tasks import process_project_rag_async
-            process_project_rag_async.delay(project.id)
-            
-            # Check if processing completed
-            try:
-                rag_data = project.rag_data
-                rag_data.refresh_from_db()
-                if rag_data.is_processed:
-                    messages.success(request, 'AI assistant is ready! You can now ask questions about this project.')
-                else:
-                    messages.warning(request, 'Repository analysis is in progress. Please try again in a few minutes.')
-                    return redirect('project_detail', pk=pk)
-            except:
-                messages.error(request, 'Failed to analyze repository. Please try again later.')
-                return redirect('project_detail', pk=pk)
-                
-        except Exception as e:
-            print(f"❌ Error creating/processing RAG data: {e}")
-            messages.error(request, 'Failed to set up AI assistant. Please try again later.')
-            return redirect('project_detail', pk=pk)
-
-    print("✅ All checks passed - rendering project chatbot page")
-    return render(request, 'portfolio/project_chatbot.html', {
-        'project': project
-    })
-
-
-@csrf_exempt
-@require_http_methods(["POST"])
-async def project_chatbot_ask(request, pk):
-    """Handle project-specific RAG chatbot queries"""
-    try:
-        project = get_object_or_404(Project, pk=pk)
-        data = json.loads(request.body)
-        user_message = data.get('message', '')
-        chat_history = data.get('chat_history', [])
-
-        if not user_message:
-            return JsonResponse({
-                'error': 'No message provided',
-                'status': 'error'
-            }, status=400)
-
-        # Check if RAG functionality is available
-        if not RAG_AVAILABLE:
-            # Provide basic fallback response using project information
-            basic_response = f"""I can help you with general questions about the **{project.title}** project.
-
-**Project Description:**
-{project.description}
-
-**Technologies Used:** {', '.join([tag.name for tag in project.tags.all()])}
-
-**Repository:** {project.github_url}
-
-Since advanced code analysis is currently unavailable, I can provide general information about the project. For specific code questions, please visit the GitHub repository directly.
-
-What would you like to know about this project?"""
-            
-            return JsonResponse({
-                'response': basic_response,
-                'status': 'success'
-            })
-
-        # Check if RAG data exists and is processed
-        try:
-            rag_data = project.rag_data
-            if not rag_data.is_processed:
-                return JsonResponse({
-                    'response': 'The project repository is still being processed. Please try again later.',
-                    'status': 'success'
-                })
-        except ProjectRAG.DoesNotExist:
-            return JsonResponse({
-                'response': 'The project repository data is not available. Please contact the administrator.',
-                'status': 'success'
-            })
-
-        # Import RAG dependencies locally
-        try:
-            import numpy as np
-            import faiss
-            from .rag_service import ProjectRAGService
-        except (ImportError, SyntaxError, Exception) as e:
-            return JsonResponse({
-                'response': f'The RAG system is currently unavailable due to dependency issues: {str(e)}',
-                'status': 'success'
-            })
-
-        # Initialize RAG service
-        rag_service = ProjectRAGService()
-
-        # Get embeddings data
-        embeddings_data = rag_data.get_embeddings_data()
-        if not embeddings_data:
-            return JsonResponse({
-                'response': 'Sorry, there was an issue accessing the project data. Please try again later.',
-                'status': 'success'
-            })
-
-        # Reconstruct FAISS index
-        chunks = embeddings_data.get('chunks', [])
-        embeddings_list = embeddings_data.get('embeddings', [])
-
-        if not chunks or not embeddings_list:
-            return JsonResponse({
-                'response': 'Sorry, the project data is incomplete. Please contact the administrator.',
-                'status': 'success'
-            })
-
-        # Convert embeddings back to numpy array
-        embeddings = np.array(embeddings_list, dtype=np.float32)
-
-        # Create FAISS index
-        dimension = embeddings.shape[1]
-        index = faiss.IndexFlatIP(dimension)
-        index.add(embeddings)
-
-        # Search for relevant chunks
-        similar_chunks = rag_service.search_similar_chunks(
-            user_message, index, chunks, top_k=5
-        )
-
-        if not similar_chunks:
-            return JsonResponse({
-                'response': f'I couldn\'t find relevant information about "{user_message}" in the {project.title} repository. Could you try rephrasing your question or ask about specific files, functions, or features?',
-                'status': 'success'
-            })
-
-        # Extract just the chunk text for context
-        context_chunks = [chunk for chunk, _ in similar_chunks]
-
-        # Generate response using Groq with chat history
-        response = rag_service.generate_response_with_groq(
-            user_message, context_chunks, project.title, chat_history
-        )
-
-        return JsonResponse({
-            'response': response,
-            'status': 'success'
-        })
-
-    except Exception as e:
-        return JsonResponse({
-            'error': str(e),
-            'status': 'error'
-        }, status=500)
+# def project_chatbot(request, pk):
+#     """Project-specific RAG chatbot page"""
+#     project = get_object_or_404(Project, pk=pk)
+#     print(f"🤖 Project chatbot request for: {project.title} (ID: {pk})")
+# 
+#     # Check if project has GitHub URL
+#     print(f"🔗 GitHub URL: {project.github_url}")
+#     if not project.github_url:
+#         print("❌ No GitHub URL - redirecting")
+#         messages.error(request, 'This project does not have a GitHub repository for discussion.')
+#         return redirect('project_detail', pk=pk)
+# 
+#     # Check if RAG functionality is available
+#     print(f"🔍 RAG_AVAILABLE: {RAG_AVAILABLE}")
+#     if not RAG_AVAILABLE:
+#         print("❌ RAG dependencies not available - providing fallback chatbot")
+#         messages.warning(request, 'Advanced AI analysis is currently unavailable. Using basic project information for discussion.')
+#         
+#         # Use fallback chatbot without RAG
+#         return render(request, 'portfolio/project_chatbot.html', {
+#             'project': project,
+#             'fallback_mode': True
+#         })
+# 
+#     # Check if RAG data exists and is processed
+#     try:
+#         rag_data = project.rag_data
+#         print(f"📊 RAG data exists: True, is_processed: {rag_data.is_processed}")
+#         if not rag_data.is_processed:
+#             print("🔄 RAG data not processed - starting processing")
+#             messages.info(request, 'Preparing AI assistant for this project. Please wait while we analyze the repository...')
+#             
+#             # Process RAG data in the background
+#             try:
+#                 from django.core.management import call_command
+#                 call_command('process_project_rag', project_id=pk)
+#                 
+#                 # Re-check if processing completed
+#                 rag_data.refresh_from_db()
+#                 if rag_data.is_processed:
+#                     messages.success(request, 'AI assistant is ready! You can now ask questions about this project.')
+#                 else:
+#                     messages.warning(request, 'Repository analysis is in progress. Please try again in a few minutes.')
+#                     return redirect('project_detail', pk=pk)
+#             except Exception as e:
+#                 print(f"❌ Error processing RAG data: {e}")
+#                 messages.error(request, 'Failed to analyze repository. Please try again later.')
+#                 return redirect('project_detail', pk=pk)
+#                 
+#     except ProjectRAG.DoesNotExist:
+#         print("❌ No RAG data exists - creating and processing")
+#         messages.info(request, 'Setting up AI assistant for this project. Analyzing repository...')
+#         
+#         try:
+#             # Create RAG data entry
+#             ProjectRAG.objects.create(
+#                 project=project,
+#                 repo_content='',
+#                 embeddings_data='',
+#                 is_processed=False,
+#                 processing_status='pending'
+#             )
+#             
+#             # Process RAG data asynchronously
+#             from .tasks import process_project_rag_async
+#             process_project_rag_async.delay(project.id)
+#             
+#             # Check if processing completed
+#             try:
+#                 rag_data = project.rag_data
+#                 rag_data.refresh_from_db()
+#                 if rag_data.is_processed:
+#                     messages.success(request, 'AI assistant is ready! You can now ask questions about this project.')
+#                 else:
+#                     messages.warning(request, 'Repository analysis is in progress. Please try again in a few minutes.')
+#                     return redirect('project_detail', pk=pk)
+#             except:
+#                 messages.error(request, 'Failed to analyze repository. Please try again later.')
+#                 return redirect('project_detail', pk=pk)
+#                 
+#         except Exception as e:
+#             print(f"❌ Error creating/processing RAG data: {e}")
+#             messages.error(request, 'Failed to set up AI assistant. Please try again later.')
+#             return redirect('project_detail', pk=pk)
+# 
+#     print("✅ All checks passed - rendering project chatbot page")
+#     return render(request, 'portfolio/project_chatbot.html', {
+#         'project': project
+#     })
 
 
-@csrf_exempt
-@require_http_methods(["POST"])
-async def chatbot_ask(request):
-    try:
-        data = json.loads(request.body)
-        user_message = data.get('message', '')
+# @csrf_exempt
+# @require_http_methods(["POST"])
+# async def project_chatbot_ask(request, pk):
+#     """Handle project-specific RAG chatbot queries"""
+#     try:
+#         project = get_object_or_404(Project, pk=pk)
+#         data = json.loads(request.body)
+#         user_message = data.get('message', '')
+#         chat_history = data.get('chat_history', [])
+# 
+#         if not user_message:
+#             return JsonResponse({
+#                 'error': 'No message provided',
+#                 'status': 'error'
+#             }, status=400)
+# 
+#         # Check if RAG functionality is available
+#         if not RAG_AVAILABLE:
+#             # Provide basic fallback response using project information
+#             basic_response = f"""I can help you with general questions about the **{project.title}** project.
+# 
+# **Project Description:**
+# {project.description}
+# 
+# **Technologies Used:** {', '.join([tag.name for tag in project.tags.all()])}
+# 
+# **Repository:** {project.github_url}
+# 
+# Since advanced code analysis is currently unavailable, I can provide general information about the project. For specific code questions, please visit the GitHub repository directly.
+# 
+# What would you like to know about this project?"""
+#             
+#             return JsonResponse({
+#                 'response': basic_response,
+#                 'status': 'success'
+#             })
+# 
+#         # Check if RAG data exists and is processed
+#         try:
+#             rag_data = project.rag_data
+#             if not rag_data.is_processed:
+#                 return JsonResponse({
+#                     'response': 'The project repository is still being processed. Please try again later.',
+#                     'status': 'success'
+#                 })
+#         except ProjectRAG.DoesNotExist:
+#             return JsonResponse({
+#                 'response': 'The project repository data is not available. Please contact the administrator.',
+#                 'status': 'success'
+#             })
+# 
+#         # Import RAG dependencies locally
+#         try:
+#             import numpy as np
+#             import faiss
+#             from .rag_service import ProjectRAGService
+#         except (ImportError, SyntaxError, Exception) as e:
+#             return JsonResponse({
+#                 'response': f'The RAG system is currently unavailable due to dependency issues: {str(e)}',
+#                 'status': 'success'
+#             })
+# 
+#         # Initialize RAG service
+#         rag_service = ProjectRAGService()
+# 
+#         # Get embeddings data
+#         embeddings_data = rag_data.get_embeddings_data()
+#         if not embeddings_data:
+#             return JsonResponse({
+#                 'response': 'Sorry, there was an issue accessing the project data. Please try again later.',
+#                 'status': 'success'
+#             })
+# 
+#         # Reconstruct FAISS index
+#         chunks = embeddings_data.get('chunks', [])
+#         embeddings_list = embeddings_data.get('embeddings', [])
+# 
+#         if not chunks or not embeddings_list:
+#             return JsonResponse({
+#                 'response': 'Sorry, the project data is incomplete. Please contact the administrator.',
+#                 'status': 'success'
+#             })
+# 
+#         # Convert embeddings back to numpy array
+#         embeddings = np.array(embeddings_list, dtype=np.float32)
+# 
+#         # Create FAISS index
+#         dimension = embeddings.shape[1]
+#         index = faiss.IndexFlatIP(dimension)
+#         index.add(embeddings)
+# 
+#         # Search for relevant chunks
+#         similar_chunks = rag_service.search_similar_chunks(
+#             user_message, index, chunks, top_k=5
+#         )
+# 
+#         if not similar_chunks:
+#             return JsonResponse({
+#                 'response': f'I couldn\'t find relevant information about "{user_message}" in the {project.title} repository. Could you try rephrasing your question or ask about specific files, functions, or features?',
+#                 'status': 'success'
+#             })
+# 
+#         # Extract just the chunk text for context
+#         context_chunks = [chunk for chunk, _ in similar_chunks]
+# 
+#         # Generate response using Groq with chat history
+#         response = rag_service.generate_response_with_groq(
+#             user_message, context_chunks, project.title, chat_history
+#         )
+# 
+#         return JsonResponse({
+#             'response': response,
+#             'status': 'success'
+#         })
+# 
+#     except Exception as e:
+#         return JsonResponse({
+#             'error': str(e),
+#             'status': 'error'
+#         }, status=500)
 
-        # Mock response - replace with actual chatbot logic
-        response = f"Thanks for your message: '{user_message}'. This is a placeholder response. You can integrate with OpenAI API or other AI services here."
 
-        return JsonResponse({
-            'response': response,
-            'status': 'success'
-        })
-    except Exception as e:
-        return JsonResponse({
-            'error': str(e),
-            'status': 'error'
-        }, status=400)
+
+# @csrf_exempt
+# @require_http_methods(["POST"])
+# async def chatbot_ask(request):
+#     try:
+#         data = json.loads(request.body)
+#         user_message = data.get('message', '')
+# 
+#         # Mock response - replace with actual chatbot logic
+#         response = f"Thanks for your message: '{user_message}'. This is a placeholder response. You can integrate with OpenAI API or other AI services here."
+# 
+#         return JsonResponse({
+#             'response': response,
+#             'status': 'success'
+#         })
+#     except Exception as e:
+#         return JsonResponse({
+#             'error': str(e),
+#             'status': 'error'
+#         }, status=400)
 
 
 def newsletter(request):
