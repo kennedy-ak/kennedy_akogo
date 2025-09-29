@@ -8,16 +8,18 @@
 <section class="hero py-5">
     <div class="container">
         <div class="row align-items-center">
-            <div class="col-lg-6">
-                <h1 class="display-4 fw-bold mb-3">Hi, I'm Kennedy Akogo✌️</h1>
-                <p class="lead mb-4">I build intelligent systems and AI-powered applications .</p>
+            <div class="col-lg-6 fade-in-left">
+                <h1 class="display-4 fw-bold mb-3 glow-text">Hi, I'm Kennedy Akogo✌️</h1>
+                <p class="lead mb-4">I build intelligent systems and AI-powered applications.</p>
                 <div class="d-flex gap-3">
                     <a href="{% url 'contact' %}" class="btn btn-primary btn-lg">Get In Touch</a>
-
                 </div>
             </div>
-            <div class="col-lg-6">
-                <img src="{% static 'portfolio/img/images1.png' %}" alt="Profile" class="img-fluid rounded-circle shadow" style="max-width: 400px;">
+            <div class="col-lg-6 fade-in-right">
+                <img src="{% static 'portfolio/img/images1.png' %}" 
+                     alt="Profile" 
+                     class="img-fluid rounded-circle shadow floating" 
+                     style="max-width: 400px;">
             </div>
         </div>
     </div>
@@ -29,7 +31,11 @@
         <div class="row">
             <div class="col-lg-8 mx-auto text-center">
                 <h2 class="mb-4">About Me</h2>
-                <p class="lead">Just a passionate AI/LLM Engineer with expertise in machine learning, natural language processing, and large language model fine-tuning. I specialize in building intelligent systems and creating innovative AI-powered applications that solve real-world problems.</p>
+                <p class="lead">
+                    Just a passionate AI/LLM Engineer with expertise in machine learning, natural language processing, 
+                    and large language model fine-tuning. I specialize in building intelligent systems and creating 
+                    innovative AI-powered applications that solve real-world problems.
+                </p>
             </div>
         </div>
     </div>
@@ -40,7 +46,8 @@
     <div class="container">
         <h2 class="text-center mb-5">Skills & Technologies</h2>
         <div class="row">
-            <div class="col-md-3 mb-4">
+            <!-- AI/ML -->
+            <div class="col-md-3 mb-4 stagger-item">
                 <div class="card text-center h-100">
                     <div class="card-body">
                         <i class="bi bi-robot display-4 text-primary mb-3"></i>
@@ -49,7 +56,9 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 mb-4">
+
+            <!-- LLMs & NLP -->
+            <div class="col-md-3 mb-4 stagger-item">
                 <div class="card text-center h-100">
                     <div class="card-body">
                         <i class="bi bi-chat-dots display-4 text-primary mb-3"></i>
@@ -58,61 +67,25 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 mb-4">
-    <div class="card text-center h-100">
-        <div class="card-body">
-            <i class="bi bi-wordpress display-4 text-primary mb-3"></i> <!-- Icon for WordPress -->
-            <h5>WordPress Development</h5>
-            <p>Custom Themes, Plugins, CMS Setup, Elementor</p>
-        </div>
-    </div>
-</div>
 
-
-                        <div class="col-md-3 mb-4">
+            <!-- WordPress Development -->
+            <div class="col-md-3 mb-4 stagger-item">
                 <div class="card text-center h-100">
                     <div class="card-body">
-                        <i class="bi bi-database display-4 text-primary mb-3 floating"></i>
-                        <h5>Database</h5>
-                        <p>PostgreSQL, MySQL, MongoDB</p>
+                        <i class="bi bi-wordpress display-4 text-primary mb-3 floating"></i>
+                        <h5>WordPress Development</h5>
+                        <p>Custom Themes, Plugins, CMS Setup, Elementor</p>
                     </div>
                 </div>
             </div>
 
-              <div class="col-md-3 mb-4">
-                <div class="card text-center h-100">
-                    <div class="card-body">
-                        <i class="bi bi-cloud display-4 text-primary mb-3 floating"></i>
-                        <h5>DevOps</h5>
-                        <p>Docker, AWS, Git, CI/CD</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-4">
-                <div class="card text-center h-100">
-                    <div class="card-body">
-                        <i class="bi bi-code-slash display-4 text-primary mb-3 floating"></i>
-                        <h5>Programming</h5>
-                        <p>Python, JavaScript, SQL, Django, FastAPI</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-4">
+            <!-- Backend -->
+            <div class="col-md-3 mb-4 stagger-item">
                 <div class="card text-center h-100">
                     <div class="card-body">
                         <i class="bi bi-server display-4 text-primary mb-3 floating"></i>
                         <h5>Backend</h5>
                         <p>Python, Django, FastAPI, REST APIs</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3 mb-4">
-                <div class="card text-center h-100">
-                    <div class="card-body">
-                        <i class="bi bi-cloud display-4 text-primary mb-3 floating"></i>
-                        <h5>Cloud & MLOps</h5>
-                        <p>AWS, Azure, Docker, MLflow, Kubernetes</p>
                     </div>
                 </div>
             </div>
@@ -129,9 +102,13 @@
             <div class="col-lg-4 mb-4 stagger-item">
                 <div class="card h-100">
                     {% if project.images.first %}
-                        <img src="{{ project.images.first.image.url }}" class="card-img-top" alt="{{ project.title }}" style="height: 200px; object-fit: cover;">
+                        <img src="{{ project.images.first.image.url }}" 
+                             class="card-img-top" 
+                             alt="{{ project.title }}" 
+                             style="height: 200px; object-fit: cover;">
                     {% else %}
-                        <div class="card-img-top d-flex align-items-center justify-content-center" style="height: 200px; background: var(--dark-surface);">
+                        <div class="card-img-top d-flex align-items-center justify-content-center" 
+                             style="height: 200px; background: var(--dark-surface);">
                             <i class="bi bi-image display-4 text-muted"></i>
                         </div>
                     {% endif %}
@@ -178,9 +155,13 @@
             <div class="col-lg-4 mb-4 stagger-item">
                 <div class="card h-100">
                     {% if blog.cover_image %}
-                        <img src="{{ blog.cover_image.url }}" class="card-img-top" alt="{{ blog.title }}" style="height: 200px; object-fit: cover;">
+                        <img src="{{ blog.cover_image.url }}" 
+                             class="card-img-top" 
+                             alt="{{ blog.title }}" 
+                             style="height: 200px; object-fit: cover;">
                     {% else %}
-                        <div class="card-img-top d-flex align-items-center justify-content-center" style="height: 200px; background: var(--dark-surface);">
+                        <div class="card-img-top d-flex align-items-center justify-content-center" 
+                             style="height: 200px; background: var(--dark-surface);">
                             <i class="bi bi-image display-4 text-muted"></i>
                         </div>
                     {% endif %}
