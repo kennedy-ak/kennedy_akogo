@@ -19,6 +19,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-EXPOSE 8000
+EXPOSE 8080
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "personal_site.wsgi:application"]
+CMD gunicorn --bind 0.0.0.0:${PORT:-8080} personal_site.wsgi:application
